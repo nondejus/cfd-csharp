@@ -60,16 +60,9 @@ endfunction()
 
 
 ####################
-# test
-####################
-project(cfd_all_test CXX)
-if(ENABLE_TESTS)
-enable_testing()
-endif()		# ENABLE_TESTS
-
-####################
 # subdirectories
 ####################
+project(cfd_all_test CXX)
 if(NOT CFD_SINGLE_BUILD)
 add_subdirectory(external)
 endif()
@@ -77,18 +70,6 @@ endif()
 if(${ENABLE_CSHARP})
 add_subdirectory(src)
 endif()
-
-
-####################
-# test subdirectories
-####################
-if(ENABLE_TESTS)
-include(CTest)
-
-if(${ENABLE_CSHARP})
-add_subdirectory(test)
-endif()
-endif()		# ENABLE_TESTS
 
 
 ####################

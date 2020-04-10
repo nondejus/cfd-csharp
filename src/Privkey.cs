@@ -12,7 +12,7 @@ namespace Cfd
   {
     public const uint Size = 32;
     private string privkey;
-    private string privkeyWif;
+    private readonly string privkeyWif;
     private CfdNetworkType networkType;
     private Pubkey pubkey;
 
@@ -112,6 +112,12 @@ namespace Cfd
       return pubkey;
     }
 
+    /// <summary>
+    /// Calculate ec-signature.
+    /// </summary>
+    /// <param name="sighash">signature hash.</param>
+    /// <param name="hasGrindR">use grind-R.</param>
+    /// <returns></returns>
     public SignParameter CalculateEcSignature(ByteData sighash, bool hasGrindR = true)
     {
       using (var handle = new ErrorHandle())

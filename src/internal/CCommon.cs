@@ -62,5 +62,11 @@ namespace Cfd
         [In] string requestName,
         [In] string requestJsonString,
         [Out] out IntPtr responseJsonString);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdSerializeByteData(
+        [In] IntPtr handle,
+        [In] string buffer,
+        [Out] out IntPtr output);
   }
 }

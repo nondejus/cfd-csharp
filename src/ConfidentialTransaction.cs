@@ -141,6 +141,7 @@ namespace Cfd
   {
     public OutPoint OutPoint { get; }
     public Script ScriptSig { get; }
+    public UInt32 Sequence { get; }
     public ScriptWitness WitnessStack { get; }
     public ScriptWitness PeginWitness { get; }
     public IssuanceData Issuance { get; }
@@ -153,6 +154,19 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = new Script();
+      this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
+      this.WitnessStack = new ScriptWitness();
+      this.PeginWitness = new ScriptWitness();
+      this.Issuance = new IssuanceData(new byte[0], new byte[0],
+          new ConfidentialValue(), new ConfidentialValue(),
+          new byte[0], new byte[0]);
+    }
+
+    public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence)
+    {
+      this.OutPoint = outPoint;
+      this.ScriptSig = new Script();
+      this.Sequence = sequence;
       this.WitnessStack = new ScriptWitness();
       this.PeginWitness = new ScriptWitness();
       this.Issuance = new IssuanceData(new byte[0], new byte[0],
@@ -164,6 +178,19 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = new Script();
+      this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
+      this.WitnessStack = scriptWitness;
+      this.PeginWitness = new ScriptWitness();
+      this.Issuance = new IssuanceData(new byte[0], new byte[0],
+          new ConfidentialValue(), new ConfidentialValue(),
+          new byte[0], new byte[0]);
+    }
+
+    public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence, ScriptWitness scriptWitness)
+    {
+      this.OutPoint = outPoint;
+      this.ScriptSig = new Script();
+      this.Sequence = sequence;
       this.WitnessStack = scriptWitness;
       this.PeginWitness = new ScriptWitness();
       this.Issuance = new IssuanceData(new byte[0], new byte[0],
@@ -175,6 +202,16 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = scriptSig;
+      this.Sequence = (UInt32) CfdSequenceLockTime.Disable;
+      this.WitnessStack = witnessStack;
+      this.PeginWitness = peginWitness;
+      this.Issuance = issuance;
+    }
+    public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence, Script scriptSig, ScriptWitness witnessStack, ScriptWitness peginWitness, IssuanceData issuance)
+    {
+      this.OutPoint = outPoint;
+      this.ScriptSig = scriptSig;
+      this.Sequence = sequence;
       this.WitnessStack = witnessStack;
       this.PeginWitness = peginWitness;
       this.Issuance = issuance;
@@ -1306,7 +1343,7 @@ namespace Cfd
       }
 
       return new ConfidentialTxIn(
-          new OutPoint(txid, vout), new Script(scriptSig),
+          new OutPoint(txid, vout), sequence, new Script(scriptSig),
           new ScriptWitness(witnessArray), new ScriptWitness(peginWitness),
           new IssuanceData(nonceBytes, entropyBytes,
               new ConfidentialValue(assetValue, assetAmount),

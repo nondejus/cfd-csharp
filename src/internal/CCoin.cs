@@ -1,56 +1,101 @@
-// using System;
-// using System.Runtime.InteropServices;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Cfd
 {
-  /*
-    internal static class CCoin
-    {
+  internal static class CCoin
+  {
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdInitializeCoinSelection(
+        [In] IntPtr handle,
+        [In] uint utxoCount,
+        [In] uint targetAssetCount,
+        [In] string feeAsset,
+        [In] long tx_feeAmount,
+        [In] double effectiveFeeRate,
+        [In] double longTermFeeRate,
+        [In] double dustFeeRate,
+        [In] long knapsackMinChange,
+        [Out] out IntPtr coinSelectHandle);
 
-  internal static extern CfdErrorCode CfdInitializeCoinSelection(
-      void* handle, uint32_t utxo_count, uint32_t target_asset_count,
-      const char* fee_asset, int64_t tx_fee_amount, double effective_fee_rate,
-      double long_term_fee_rate, double dust_fee_rate,
-      int64_t knapsack_min_change, void** coin_select_handle);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdAddCoinSelectionUtxo(
+        [In] IntPtr handle,
+        [In] IntPtr coinSelectHandle,
+        [In] uint utxoIndex,
+        [In] string txid,
+        [In] uint vout,
+        [In] long amount,
+        [In] string asset,
+        [In] string descriptor);
 
-  internal static extern CfdErrorCode CfdAddCoinSelectionUtxo(
-      void* handle, void* coin_select_handle, int32_t utxo_index,
-      const char* txid, uint32_t vout, int64_t amount, const char* asset,
-      const char* descriptor);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdAddCoinSelectionAmount(
+        [In] IntPtr handle,
+        [In] IntPtr coinSelectHandle,
+        [In] uint assetIndex,
+        [In] long amount,
+        [In] string asset);
 
-  internal static extern CfdErrorCode CfdAddCoinSelectionAmount(
-      void* handle, void* coin_select_handle, uint32_t asset_index,
-      int64_t amount, const char* asset);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdFinalizeCoinSelection(
+        [In] IntPtr handle,
+        [In] IntPtr coinSelectHandle,
+        [Out] out long utxoFeeAmount);
 
-  internal static extern CfdErrorCode CfdFinalizeCoinSelection(
-      void* handle, void* coin_select_handle, int64_t* utxo_fee_amount);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdGetSelectedCoinIndex(
+        [In] IntPtr handle,
+        [In] IntPtr coinSelectHandle,
+        [In] uint index,
+        [Out] out uint utxoIndex);
 
-  internal static extern CfdErrorCode CfdGetSelectedCoinIndex(
-      void* handle, void* coin_select_handle, uint32_t index,
-      int32_t* utxo_index);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdGetSelectedCoinAssetAmount(
+        [In] IntPtr handle,
+        [In] IntPtr coinSelectHandle,
+        [In] uint assetIndex,
+        [Out] out long amount);
 
-  internal static extern CfdErrorCode CfdGetSelectedCoinAssetAmount(
-      void* handle, void* coin_select_handle, uint32_t asset_index,
-      int64_t* amount);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdFreeCoinSelectionHandle(
+        [In] IntPtr handle,
+        [In] IntPtr coinSelectHandle);
 
-  internal static extern CfdErrorCode CfdFreeCoinSelectionHandle(
-      void* handle, void* coin_select_handle);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdInitializeEstimateFee(
+        [In] IntPtr handle,
+        [Out] out IntPtr feeHandle,
+        [In] bool isElements);
 
-  internal static extern CfdErrorCode CfdInitializeEstimateFee(
-      void* handle, void** fee_handle, bool is_elements);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdAddTxInForEstimateFee(
+        [In] IntPtr handle,
+        [In] IntPtr feeHandle,
+        [In] string txid,
+        [In] uint vout,
+        [In] string descriptor,
+        [In] string asset,
+        [In] bool isIssuance,
+        [In] bool isBlindIssuance,
+        [In] bool isPegin,
+        [In] uint peginBtcTxSize,
+        [In] string fedpegScript);
 
-  internal static extern CfdErrorCode CfdAddTxInForEstimateFee(
-      void* handle, void* fee_handle, const char* txid, uint32_t vout,
-      const char* descriptor, const char* asset, bool is_issuance,
-      bool is_blind_issuance, bool is_pegin, uint32_t pegin_btc_tx_size,
-      const char* fedpeg_script);
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdFinalizeEstimateFee(
+        [In] IntPtr handle,
+        [In] IntPtr feeHandle,
+        [In] string txHex,
+        [In] string feeAsset,
+        [Out] out long txFee,
+        [Out] out long utxoFee,
+        [In] bool isBlind,
+        [In] double effectiveFeeRate);
 
-  internal static extern CfdErrorCode CfdFinalizeEstimateFee(
-      void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
-      int64_t* tx_fee, int64_t* utxo_fee, bool is_blind,
-      double effective_fee_rate);
-
-  internal static extern CfdErrorCode CfdFreeEstimateFeeHandle(void* handle, void* fee_handle);
-    }
-  */
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdFreeEstimateFeeHandle(
+        [In] IntPtr handle,
+        [In] IntPtr feeHandle);
+  }
 }

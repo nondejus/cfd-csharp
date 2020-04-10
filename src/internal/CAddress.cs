@@ -29,7 +29,7 @@ namespace Cfd
         [In] IntPtr multisigHandle,
         [In] string pubkey);
 
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdFinalizeMultisigScript(
         [In] IntPtr handle,
         [In] IntPtr multisigHandle,
@@ -52,7 +52,7 @@ namespace Cfd
         [Out] out IntPtr descriptorHandle,
         [Out] out uint maxIndex);
 
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdGetDescriptorData(
         [In] IntPtr handle,
         [In] IntPtr descriptorHandle,
@@ -72,7 +72,7 @@ namespace Cfd
         [Out] out uint maxKeyNum,
         [Out] out uint reqSigNum);
 
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdGetDescriptorMultisigKey(
         [In] IntPtr handle,
         [In] IntPtr descriptorHandle,
@@ -86,6 +86,35 @@ namespace Cfd
     internal static extern CfdErrorCode CfdFreeDescriptorHandle(
         [In] IntPtr handle,
         [In] IntPtr descriptorHandle);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdGetDescriptorChecksum(
+        [In] IntPtr handle,
+        [In] int networkType,
+        [In] string descriptor,
+        [Out] out IntPtr descriptorAddedChecksum);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdGetAddressesFromMultisig(
+        [In] IntPtr handle,
+        [In] string redeemScript,
+        [In] int networkType,
+        [In] int hashType,
+        [Out] out IntPtr addrMultisigKeysHandle,
+        [Out] out uint maxKeyNum);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdGetAddressFromMultisigKey(
+        [In] IntPtr handle,
+        [In] IntPtr addrMultisigKeysHandle,
+        [In] uint index,
+        [Out] out IntPtr address,
+        [Out] out IntPtr pubkey);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdFreeAddressesMultisigHandle(
+        [In] IntPtr handle,
+        [In] IntPtr addrMultisigKeysHandle);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdGetAddressFromLockingScript(

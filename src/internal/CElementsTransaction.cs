@@ -7,6 +7,16 @@ using System.Runtime.InteropServices;
 namespace Cfd
 {
   /// <summary>
+  /// binding option.
+  /// </summary>
+  public enum CfdBlindOption
+  {
+    MinimumRangeValue = 1,  //!< minRangeValue
+    Exponent = 2,           //!< exponent
+    MinimumBits = 3,        //!< minBits
+  }
+
+  /// <summary>
   /// cfd library (elements transaction) access class.
   /// </summary>
   internal static class CElementsTransaction
@@ -188,6 +198,13 @@ namespace Cfd
         [Out] out IntPtr blindHandle);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdSetBlindTxOption(
+        [In] IntPtr handle,
+        [In] IntPtr blindHandle,
+        [In] int key,
+        [In] long value);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdAddBlindTxInData(
         [In] IntPtr handle,
         [In] IntPtr blindHandle,
@@ -206,6 +223,12 @@ namespace Cfd
         [In] IntPtr blindHandle,
         [In] uint index,
         [In] string confidentialKey);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdAddBlindTxOutByAddress(
+        [In] IntPtr handle,
+        [In] IntPtr blindHandle,
+        [In] string confidentialAddress);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdFinalizeBlindTx(

@@ -7,6 +7,7 @@ namespace Cfd
 {
   public class ConfidentialValue
   {
+    const UInt32 CommitmentSize = 33;
     private readonly string commitmentValue;
     private readonly long satoshiValue;
 
@@ -41,7 +42,7 @@ namespace Cfd
 
     public bool HasBlinding()
     {
-      return satoshiValue == 0 && commitmentValue.Length == 66;
+      return satoshiValue == 0 && commitmentValue.Length == (CommitmentSize * 2);
     }
 
     public long GetSatoshiValue()

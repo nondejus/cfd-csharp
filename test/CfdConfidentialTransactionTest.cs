@@ -129,6 +129,11 @@ namespace Cfd.xTests
       }
     }
 
+    private string ConvertRangeProof(ByteData data)
+    {
+      return ConvertRangeProof(data.ToBytes());
+    }
+
     private void DumpDecodeTxData(string txHex)
     {
       Cfd.ConfidentialTransaction tx = new Cfd.ConfidentialTransaction(txHex);
@@ -163,8 +168,8 @@ namespace Cfd.xTests
         if (!txin.Issuance.IssuanceAmount.IsEmpty() || !txin.Issuance.InflationKeys.IsEmpty())
         {
           Console.WriteLine("    - Issuance");
-          Console.WriteLine("      - nonce      = " + StringUtil.FromBytes(txin.Issuance.BlindingNonce));
-          Console.WriteLine("      - entropy    = " + StringUtil.FromBytes(txin.Issuance.AssetEntropy));
+          Console.WriteLine("      - nonce      = " + StringUtil.FromBytes(txin.Issuance.BlindingNonce.ToBytes()));
+          Console.WriteLine("      - entropy    = " + StringUtil.FromBytes(txin.Issuance.AssetEntropy.ToBytes()));
           if (!txin.Issuance.IssuanceAmount.IsEmpty())
           {
             Console.WriteLine("      - issueAmt   = " + txin.Issuance.IssuanceAmount.ToString());
@@ -201,7 +206,7 @@ namespace Cfd.xTests
           Console.WriteLine("    - scriptPubkey = " + txout.ScriptPubkey.ToHexString());
           Console.WriteLine("      - asm        = " + txout.ScriptPubkey.GetAsm());
         }
-        if ((txout.SurjectionProof.Length != 0) || (txout.RangeProof.Length != 0))
+        if ((txout.SurjectionProof.GetSize() != 0) || (txout.RangeProof.GetSize() != 0))
         {
           Console.WriteLine("    - SurjProof    = " + StringUtil.FromBytes(txout.SurjectionProof));
           Console.WriteLine("    - RangeProof   = " + ConvertRangeProof(txout.RangeProof));

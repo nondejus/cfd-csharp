@@ -9,13 +9,17 @@ namespace Cfd
   {
     public static Script CreateMultisig(Pubkey[] pubkeyList, uint requireNum)
     {
-      if ((pubkeyList == null) || (pubkeyList.Length == 0) || (pubkeyList.Length < requireNum))
+      if (pubkeyList is null)
+      {
+        throw new ArgumentNullException(nameof(pubkeyList));
+      }
+      if ((pubkeyList.Length == 0) || (pubkeyList.Length < requireNum))
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to multisig value.");
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = CAddress.CfdInitializeMultisigScript(
+        var ret = NativeMethods.CfdInitializeMultisigScript(
             handle.GetHandle(),
             (int)CfdNetworkType.Mainnet,
             (int)CfdHashType.P2wsh,
@@ -28,7 +32,7 @@ namespace Cfd
         {
           for (uint index = 0; index < pubkeyList.Length; ++index)
           {
-            ret = CAddress.CfdAddMultisigScriptData(
+            ret = NativeMethods.CfdAddMultisigScriptData(
                 handle.GetHandle(), multisigHandle,
                 pubkeyList[index].ToHexString());
             if (ret != CfdErrorCode.Success)
@@ -37,7 +41,7 @@ namespace Cfd
             }
           }
 
-          ret = CAddress.CfdFinalizeMultisigScript(
+          ret = NativeMethods.CfdFinalizeMultisigScript(
               handle.GetHandle(), multisigHandle, requireNum,
               out IntPtr address,
               out IntPtr redeemScript,
@@ -52,7 +56,7 @@ namespace Cfd
         }
         finally
         {
-          CAddress.CfdFreeMultisigScriptHandle(handle.GetHandle(), multisigHandle);
+          NativeMethods.CfdFreeMultisigScriptHandle(handle.GetHandle(), multisigHandle);
         }
       }
     }

@@ -14,7 +14,7 @@ namespace Cfd
     public Script()
     {
       script = "";
-      scriptItems = new string[0];
+      scriptItems = Array.Empty<string>();
     }
 
     public Script(string scriptHex)
@@ -50,7 +50,7 @@ namespace Cfd
 
     private static string[] ParseScript(ErrorHandle handle, string scriptHex)
     {
-      var ret = CScript.CfdParseScript(
+      var ret = NativeMethods.CfdParseScript(
         handle.GetHandle(), scriptHex, out IntPtr scriptItemHandle,
         out uint scriptItemNum);
       if (ret != CfdErrorCode.Success)
@@ -62,7 +62,7 @@ namespace Cfd
         var items = new string[scriptItemNum];
         for (uint index = 0; index < scriptItemNum; ++index)
         {
-          ret = CScript.CfdGetScriptItem(
+          ret = NativeMethods.CfdGetScriptItem(
             handle.GetHandle(), scriptItemHandle, index,
             out IntPtr scriptItem);
           if (ret != CfdErrorCode.Success)
@@ -75,7 +75,7 @@ namespace Cfd
       }
       finally
       {
-        CScript.CfdFreeScriptItemHandle(
+        NativeMethods.CfdFreeScriptItemHandle(
           handle.GetHandle(),
           scriptItemHandle);
       }

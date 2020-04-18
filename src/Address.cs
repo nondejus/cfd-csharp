@@ -76,18 +76,20 @@ namespace Cfd
   {
     All = 0x01,    //!< SIGHASH_ALL
     None = 0x02,   //!< SIGHASH_NONE
+#pragma warning disable CA1720 // 識別子に型名が含まれます
     Single = 0x03  //!< SIGHASH_SINGLE
+#pragma warning restore CA1720 // 識別子に型名が含まれます
   };
 
   public class Address
   {
     private readonly string address;
-    private string lockingScript;
+    private readonly string lockingScript;
     private readonly string p2shSegwitLockingScript;
     private readonly string hash;
-    private CfdNetworkType network;
+    private readonly CfdNetworkType network;
     private CfdAddressType addressType;
-    private CfdWitnessVersion witnessVersion;
+    private readonly CfdWitnessVersion witnessVersion;
 
     public Address()
     {
@@ -110,9 +112,13 @@ namespace Cfd
 
     public Address(Pubkey pubkey, CfdAddressType type, CfdNetworkType network)
     {
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CAddress.CfdCreateAddress(
+        var ret = NativeMethods.CfdCreateAddress(
           handle.GetHandle(),
           (int)type,
           pubkey.ToHexString(),
@@ -142,9 +148,13 @@ namespace Cfd
 
     public Address(Script script, CfdAddressType type, CfdNetworkType networkType)
     {
+      if (script is null)
+      {
+        throw new ArgumentNullException(nameof(script));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CAddress.CfdCreateAddress(
+        var ret = NativeMethods.CfdCreateAddress(
           handle.GetHandle(),
           (int)type,
           "",
@@ -160,9 +170,7 @@ namespace Cfd
         address = CCommon.ConvertToString(outputAddress);
         lockingScript = CCommon.ConvertToString(outputLockingScript);
         p2shSegwitLockingScript = CCommon.ConvertToString(outputP2shSegwitLockingScript);
-
-        Initialize(handle, address, out CfdNetworkType outputNetwork,
-            out CfdWitnessVersion outputWitnessVersion, out string tempLockingScript,
+        Initialize(handle, address, out _, out CfdWitnessVersion outputWitnessVersion, out _,
             out string outputHash);
         witnessVersion = outputWitnessVersion;
         hash = outputHash;
@@ -174,10 +182,14 @@ namespace Cfd
 
     public static Address GetAddressByLockingScript(Script inputLockingScript, CfdNetworkType network)
     {
+      if (inputLockingScript is null)
+      {
+        throw new ArgumentNullException(nameof(inputLockingScript));
+      }
       string address = "";
       using (var handle = new ErrorHandle())
       {
-        var ret = CAddress.CfdGetAddressFromLockingScript(
+        var ret = NativeMethods.CfdGetAddressFromLockingScript(
           handle.GetHandle(),
           inputLockingScript.ToHexString(),
           (int)network,
@@ -234,7 +246,7 @@ namespace Cfd
     private void Initialize(ErrorHandle handle, string addressString, out CfdNetworkType outputNetwork,
         out CfdWitnessVersion outputWitnessVersion, out string outputLockingScript, out string outputHash)
     {
-      var ret = CAddress.CfdGetAddressInfo(
+      var ret = NativeMethods.CfdGetAddressInfo(
         handle.GetHandle(),
         addressString,
         out int networkType,

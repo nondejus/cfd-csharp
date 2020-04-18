@@ -53,7 +53,7 @@ namespace Cfd
 
     public bool Equals(Txid obj)
     {
-      if (Object.ReferenceEquals(obj, null))
+      if (obj is null)
       {
         return false;
       }
@@ -72,14 +72,14 @@ namespace Cfd
 
     public override int GetHashCode()
     {
-      return txid.GetHashCode();
+      return HashCode.Combine(txid);
     }
 
     public static bool operator ==(Txid lhs, Txid rhs)
     {
-      if (Object.ReferenceEquals(lhs, null))
+      if (lhs is null)
       {
-        if (Object.ReferenceEquals(rhs, null))
+        if (rhs is null)
         {
           return true;
         }

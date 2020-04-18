@@ -10,7 +10,7 @@ namespace Cfd
   {
     public const uint UncompressLength = 65;
     public const uint CompressLength = 33;
-    private string pubkey;
+    private readonly string pubkey;
 
     /// <summary>
     /// Constructor. (empty)

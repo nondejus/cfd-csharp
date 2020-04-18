@@ -7,18 +7,18 @@ namespace Cfd
   /// <summary>
   /// txin sequence locktime
   /// </summary>
-  public enum CfdSequenceLockTime : uint
+  public static class CfdSequenceLockTime
   {
     /// disable locktime
-    Disable = 0xffffffff,
+    public const uint Disable = 0xffffffff;
     /// enable locktime (maximum time)
-    EnableMax = 0xfffffffe,
+    public const uint EnableMax = 0xfffffffe;
   };
 
   /// <summary>
   /// Transaction signature hash type.
   /// </summary>
-  public struct SignatureHashType
+  public struct SignatureHashType : IEquatable<SignatureHashType>
   {
     /// <summary>
     /// signature hash type.
@@ -39,12 +39,43 @@ namespace Cfd
       this.SighashType = sighashType;
       this.IsSighashAnyoneCanPay = sighashAnyoneCanPay;
     }
+
+    public bool Equals(SignatureHashType other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return SighashType.Equals(other.SighashType) &&
+          (IsSighashAnyoneCanPay == other.IsSighashAnyoneCanPay);
+    }
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is SignatureHashType);
+    }
+
+    public override int GetHashCode()
+    {
+      return SighashType.GetHashCode() + IsSighashAnyoneCanPay.GetHashCode();
+    }
+
+    public static bool operator ==(SignatureHashType left, SignatureHashType right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(SignatureHashType left, SignatureHashType right)
+    {
+      return !(left == right);
+    }
+
   }
 
   /// <summary>
   /// Transaction input struct.
   /// </summary>
-  public struct TxIn
+  public struct TxIn : IEquatable<TxIn>
   {
     /// <summary>
     /// outpoint.
@@ -143,12 +174,43 @@ namespace Cfd
       this.Sequence = sequence;
       this.WitnessStack = scriptWitness;
     }
+
+    public bool Equals(TxIn other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return OutPoint.Equals(other.OutPoint);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is TxIn);
+    }
+
+    public override int GetHashCode()
+    {
+      return HashCode.Combine(OutPoint);
+    }
+
+    public static bool operator ==(TxIn left, TxIn right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(TxIn left, TxIn right)
+    {
+      return !(left == right);
+    }
+
   };
 
   /// <summary>
   /// Transaction output struct.
   /// </summary>
-  public struct TxOut
+  public struct TxOut : IEquatable<TxOut>
   {
     /// <summary>
     /// satoshi value.
@@ -168,6 +230,36 @@ namespace Cfd
     {
       this.SatoshiValue = satoshiValue;
       this.ScriptPubkey = scriptPubkey;
+    }
+
+    public bool Equals(TxOut other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return ScriptPubkey.Equals(other.ScriptPubkey);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is TxOut);
+    }
+
+    public override int GetHashCode()
+    {
+      return HashCode.Combine(ScriptPubkey);
+    }
+
+    public static bool operator ==(TxOut left, TxOut right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(TxOut left, TxOut right)
+    {
+      return !(left == right);
     }
   };
 }

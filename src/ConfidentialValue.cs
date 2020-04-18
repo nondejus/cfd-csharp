@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 /// <summary>
 /// cfd library namespace.
@@ -63,7 +64,7 @@ namespace Cfd
       }
       else
       {
-        return satoshiValue.ToString() + " (" + commitmentValue + ")";
+        return satoshiValue.ToString(CultureInfo.InvariantCulture) + " (" + commitmentValue + ")";
       }
     }
 

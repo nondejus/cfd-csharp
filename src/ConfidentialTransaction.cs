@@ -7,9 +7,19 @@ using System.Collections.Generic;
 namespace Cfd
 {
   /// <summary>
+  /// binding option.
+  /// </summary>
+  public enum CfdBlindOption
+  {
+    MinimumRangeValue = 1,  //!< minRangeValue
+    Exponent = 2,           //!< exponent
+    MinimumBits = 3,        //!< minBits
+  }
+
+  /// <summary>
   /// asset and amountValue data struct.
   /// </summary>
-  public struct AssetValueData
+  public struct AssetValueData : IEquatable<AssetValueData>
   {
     public string Asset { get; }
     public long SatoshiValue { get; }
@@ -57,12 +67,43 @@ namespace Cfd
       this.AssetBlindFactor = new BlindFactor();
       this.AmountBlindFactor = amountBlindFactor;
     }
+
+    public bool Equals(AssetValueData other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return Asset.Equals(other.Asset, StringComparison.Ordinal) &&
+        SatoshiValue.Equals(other.SatoshiValue);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is AssetValueData);
+    }
+
+    public override int GetHashCode()
+    {
+      return Asset.GetHashCode(StringComparison.Ordinal) + SatoshiValue.GetHashCode();
+    }
+
+    public static bool operator ==(AssetValueData left, AssetValueData right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(AssetValueData left, AssetValueData right)
+    {
+      return !(left == right);
+    }
   }
 
   /// <summary>
   /// unblinding issuance data. (asset and token)
   /// </summary>
-  public struct UnblindIssuanceData
+  public struct UnblindIssuanceData : IEquatable<UnblindIssuanceData>
   {
     public AssetValueData AssetData { get; }
     public AssetValueData TokenData { get; }
@@ -72,12 +113,43 @@ namespace Cfd
       AssetData = asset;
       TokenData = token;
     }
+
+    public bool Equals(UnblindIssuanceData other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return AssetData.Equals(other.AssetData) &&
+        TokenData.Equals(other.TokenData);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is UnblindIssuanceData);
+    }
+
+    public override int GetHashCode()
+    {
+      return AssetData.GetHashCode() + TokenData.GetHashCode();
+    }
+
+    public static bool operator ==(UnblindIssuanceData left, UnblindIssuanceData right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(UnblindIssuanceData left, UnblindIssuanceData right)
+    {
+      return !(left == right);
+    }
   }
 
   /// <summary>
   /// issuance blinding key pairs.
   /// </summary>
-  public struct IssuanceKeys
+  public struct IssuanceKeys : IEquatable<IssuanceKeys>
   {
     public Privkey AssetKey { get; }
     public Privkey TokenKey { get; }
@@ -102,19 +174,50 @@ namespace Cfd
       this.AssetKey = assetKey;
       this.TokenKey = new Privkey();
     }
+
+    public bool Equals(IssuanceKeys other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return AssetKey.Equals(other.AssetKey) &&
+        TokenKey.Equals(other.TokenKey);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is IssuanceKeys);
+    }
+
+    public override int GetHashCode()
+    {
+      return AssetKey.GetHashCode() + TokenKey.GetHashCode();
+    }
+
+    public static bool operator ==(IssuanceKeys left, IssuanceKeys right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(IssuanceKeys left, IssuanceKeys right)
+    {
+      return !(left == right);
+    }
   }
 
   /// <summary>
   /// issuance data.
   /// </summary>
-  public struct IssuanceData
+  public struct IssuanceData : IEquatable<IssuanceData>
   {
-    public byte[] BlindingNonce { get; }
-    public byte[] AssetEntropy { get; }
+    public ByteData BlindingNonce { get; }
+    public ByteData AssetEntropy { get; }
     public ConfidentialValue IssuanceAmount { get; }
     public ConfidentialValue InflationKeys { get; }
-    public byte[] IssuanceAmountRangeproof { get; }
-    public byte[] InflationKeysRangeproof { get; }
+    public ByteData IssuanceAmountRangeproof { get; }
+    public ByteData InflationKeysRangeproof { get; }
 
     /// <summary>
     /// Constructor. (use issueasset)
@@ -125,19 +228,50 @@ namespace Cfd
         ConfidentialValue issuanceAmount, ConfidentialValue tokenAmount,
         byte[] issuanceRangeproof, byte[] tokenRangeproof)
     {
-      this.BlindingNonce = blindingNonce;
-      this.AssetEntropy = assetEntropy;
+      this.BlindingNonce = new ByteData(blindingNonce);
+      this.AssetEntropy = new ByteData(assetEntropy);
       this.IssuanceAmount = issuanceAmount;
       this.InflationKeys = tokenAmount;
-      this.IssuanceAmountRangeproof = issuanceRangeproof;
-      this.InflationKeysRangeproof = tokenRangeproof;
+      this.IssuanceAmountRangeproof = new ByteData(issuanceRangeproof);
+      this.InflationKeysRangeproof = new ByteData(tokenRangeproof);
+    }
+
+    public bool Equals(IssuanceData other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return BlindingNonce.Equals(other.BlindingNonce) &&
+        AssetEntropy.Equals(other.AssetEntropy);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is IssuanceData);
+    }
+
+    public override int GetHashCode()
+    {
+      return BlindingNonce.GetHashCode() + AssetEntropy.GetHashCode();
+    }
+
+    public static bool operator ==(IssuanceData left, IssuanceData right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(IssuanceData left, IssuanceData right)
+    {
+      return !(left == right);
     }
   }
 
   /// <summary>
   /// Transaction input struct.
   /// </summary>
-  public struct ConfidentialTxIn
+  public struct ConfidentialTxIn : IEquatable<ConfidentialTxIn>
   {
     public OutPoint OutPoint { get; }
     public Script ScriptSig { get; }
@@ -157,9 +291,9 @@ namespace Cfd
       this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
       this.WitnessStack = new ScriptWitness();
       this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(new byte[0], new byte[0],
+      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
-          new byte[0], new byte[0]);
+          Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence)
@@ -169,9 +303,9 @@ namespace Cfd
       this.Sequence = sequence;
       this.WitnessStack = new ScriptWitness();
       this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(new byte[0], new byte[0],
+      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
-          new byte[0], new byte[0]);
+          Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, ScriptWitness scriptWitness)
@@ -181,9 +315,9 @@ namespace Cfd
       this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
       this.WitnessStack = scriptWitness;
       this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(new byte[0], new byte[0],
+      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
-          new byte[0], new byte[0]);
+          Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence, ScriptWitness scriptWitness)
@@ -193,9 +327,9 @@ namespace Cfd
       this.Sequence = sequence;
       this.WitnessStack = scriptWitness;
       this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(new byte[0], new byte[0],
+      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
-          new byte[0], new byte[0]);
+          Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, Script scriptSig, ScriptWitness witnessStack, ScriptWitness peginWitness, IssuanceData issuance)
@@ -216,28 +350,58 @@ namespace Cfd
       this.PeginWitness = peginWitness;
       this.Issuance = issuance;
     }
+
+    public bool Equals(ConfidentialTxIn other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return OutPoint.Equals(other.OutPoint);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is ConfidentialTxIn);
+    }
+
+    public override int GetHashCode()
+    {
+      return HashCode.Combine(OutPoint);
+    }
+
+    public static bool operator ==(ConfidentialTxIn left, ConfidentialTxIn right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(ConfidentialTxIn left, ConfidentialTxIn right)
+    {
+      return !(left == right);
+    }
   };
 
   /// <summary>
   /// Transaction output struct.
   /// </summary>
-  public struct ConfidentialTxOut
+  public struct ConfidentialTxOut : IEquatable<ConfidentialTxOut>
   {
     public ConfidentialAsset Asset { get; }
     public ConfidentialValue Value { get; }
-    public byte[] Nonce { get; }
+    public ByteData Nonce { get; }
     public Script ScriptPubkey { get; }
-    public byte[] SurjectionProof { get; }
-    public byte[] RangeProof { get; }
+    public ByteData SurjectionProof { get; }
+    public ByteData RangeProof { get; }
 
     public ConfidentialTxOut(ConfidentialAsset asset, long value)
     {
       this.Asset = asset;
       this.Value = new ConfidentialValue(value);
       this.ScriptPubkey = new Script();
-      this.Nonce = new byte[0];
-      this.SurjectionProof = new byte[0];
-      this.RangeProof = new byte[0];
+      this.Nonce = new ByteData(Array.Empty<byte>());
+      this.SurjectionProof = new ByteData(Array.Empty<byte>());
+      this.RangeProof = new ByteData(Array.Empty<byte>());
     }
 
     public ConfidentialTxOut(ConfidentialAsset asset, ConfidentialValue value, Script scriptPubkey)
@@ -245,9 +409,9 @@ namespace Cfd
       this.Asset = asset;
       this.Value = value;
       this.ScriptPubkey = scriptPubkey;
-      this.Nonce = new byte[0];
-      this.SurjectionProof = new byte[0];
-      this.RangeProof = new byte[0];
+      this.Nonce = new ByteData(Array.Empty<byte>());
+      this.SurjectionProof = new ByteData(Array.Empty<byte>());
+      this.RangeProof = new ByteData(Array.Empty<byte>());
     }
 
     public ConfidentialTxOut(ConfidentialAsset asset, ConfidentialValue value,
@@ -256,9 +420,39 @@ namespace Cfd
       this.Asset = asset;
       this.Value = value;
       this.ScriptPubkey = scriptPubkey;
-      this.Nonce = nonce;
-      this.SurjectionProof = surjectionProof;
-      this.RangeProof = rangeProof;
+      this.Nonce = new ByteData(nonce);
+      this.SurjectionProof = new ByteData(surjectionProof);
+      this.RangeProof = new ByteData(rangeProof);
+    }
+
+    public bool Equals(ConfidentialTxOut other)
+    {
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return ScriptPubkey.Equals(other.ScriptPubkey);
+    }
+
+    public override bool Equals(object obj)
+    {
+      return this.Equals(obj is ConfidentialTxOut);
+    }
+
+    public override int GetHashCode()
+    {
+      return HashCode.Combine(ScriptPubkey);
+    }
+
+    public static bool operator ==(ConfidentialTxOut left, ConfidentialTxOut right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(ConfidentialTxOut left, ConfidentialTxOut right)
+    {
+      return !(left == right);
     }
   };
 
@@ -290,6 +484,10 @@ namespace Cfd
         CfdNetworkType network = CfdNetworkType.Liquidv1,
         CfdNetworkType mainchainNetwork = CfdNetworkType.Mainnet)
     {
+      if (tx is null)
+      {
+        throw new ArgumentNullException(nameof(tx));
+      }
       string networkStr = "regtest";
       string mainchainNetworkStr = "regtest";
       if (network == CfdNetworkType.Liquidv1)
@@ -300,9 +498,11 @@ namespace Cfd
       {
         mainchainNetworkStr = "mainnet";
       }
-      string request = String.Format(
+#pragma warning disable CA1305 // IFormatProvider
+      string request = string.Format(
           "{{\"hex\":\"{0}\",\"network\":\"{1}\",\"mainchainNetwork\":\"{2}\"}}",
           tx.ToHexString(), networkStr, mainchainNetworkStr);
+#pragma warning restore CA1305 // IFormatProvider
 
       using (var handle = new ErrorHandle())
       {
@@ -324,7 +524,7 @@ namespace Cfd
     {
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdInitializeConfidentialTx(
+        var ret = NativeMethods.CfdInitializeConfidentialTx(
           handle.GetHandle(),
           version,
           locktime,
@@ -363,9 +563,13 @@ namespace Cfd
     /// <param name="sequence">sequence number. (default: 0xffffffff)</param>
     public void AddTxIn(Txid txid, uint vout, uint sequence = 0xffffffff)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxIn(
+        var ret = NativeMethods.CfdAddConfidentialTxIn(
           handle.GetHandle(), tx, txid.ToHexString(), vout, sequence, out IntPtr txString);
         if (ret != CfdErrorCode.Success)
         {
@@ -383,9 +587,13 @@ namespace Cfd
     /// <param name="sequence">sequence number. (default: 0xffffffff)</param>
     public void AddTxIn(OutPoint outpoint, uint sequence = 0xffffffff)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxIn(
+        var ret = NativeMethods.CfdAddConfidentialTxIn(
           handle.GetHandle(), tx, outpoint.GetTxid().ToHexString(), outpoint.GetVout(),
           sequence, out IntPtr txString);
         if (ret != CfdErrorCode.Success)
@@ -404,9 +612,13 @@ namespace Cfd
     /// <param name="address">txout address.</param>
     public void AddTxOut(string asset, long satoshiValue, Address address)
     {
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxOut(
+        var ret = NativeMethods.CfdAddConfidentialTxOut(
             handle.GetHandle(), tx,
             asset,
             satoshiValue,
@@ -431,9 +643,17 @@ namespace Cfd
     /// <param name="address">txout address.</param>
     public void AddTxOut(string asset, ConfidentialValue valueCommitment, Address address)
     {
+      if (valueCommitment is null)
+      {
+        throw new ArgumentNullException(nameof(valueCommitment));
+      }
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxOut(
+        var ret = NativeMethods.CfdAddConfidentialTxOut(
             handle.GetHandle(), tx,
             asset,
             (long)0,
@@ -454,7 +674,7 @@ namespace Cfd
     {
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxOut(
+        var ret = NativeMethods.CfdAddConfidentialTxOut(
             handle.GetHandle(), tx,
             "",
             satoshiValue,
@@ -475,7 +695,7 @@ namespace Cfd
     {
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxOut(
+        var ret = NativeMethods.CfdAddConfidentialTxOut(
             handle.GetHandle(), tx,
             asset,
             satoshiValue,
@@ -514,9 +734,21 @@ namespace Cfd
         IDictionary<OutPoint, IssuanceKeys> issuanceKeys,
         IDictionary<uint, Pubkey> confidentialKeys)
     {
+      if (issuanceKeys is null)
+      {
+        throw new ArgumentNullException(nameof(issuanceKeys));
+      }
+      if (confidentialKeys is null)
+      {
+        throw new ArgumentNullException(nameof(confidentialKeys));
+      }
+      if (utxos is null)
+      {
+        throw new ArgumentNullException(nameof(utxos));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdInitializeBlindTx(
+        var ret = NativeMethods.CfdInitializeBlindTx(
           handle.GetHandle(), out IntPtr blindHandle);
         if (ret != CfdErrorCode.Success)
         {
@@ -536,7 +768,7 @@ namespace Cfd
               tokenKey = keys.TokenKey.ToHexString();
             }
 
-            ret = CElementsTransaction.CfdAddBlindTxInData(
+            ret = NativeMethods.CfdAddBlindTxInData(
               handle.GetHandle(), blindHandle,
               outpoint.GetTxid().ToHexString(), outpoint.GetVout(),
               data.Asset,
@@ -553,7 +785,7 @@ namespace Cfd
 
           foreach (var index in confidentialKeys.Keys)
           {
-            ret = CElementsTransaction.CfdAddBlindTxOutData(
+            ret = NativeMethods.CfdAddBlindTxOutData(
               handle.GetHandle(), blindHandle,
               index, confidentialKeys[index].ToHexString());
             if (ret != CfdErrorCode.Success)
@@ -562,7 +794,7 @@ namespace Cfd
             }
           }
 
-          ret = CElementsTransaction.CfdFinalizeBlindTx(
+          ret = NativeMethods.CfdFinalizeBlindTx(
             handle.GetHandle(), blindHandle, tx,
             out IntPtr txHexString);
           if (ret != CfdErrorCode.Success)
@@ -573,7 +805,7 @@ namespace Cfd
         }
         finally
         {
-          CElementsTransaction.CfdFreeBlindHandle(handle.GetHandle(), blindHandle);
+          NativeMethods.CfdFreeBlindHandle(handle.GetHandle(), blindHandle);
         }
       }
     }
@@ -586,9 +818,13 @@ namespace Cfd
     /// <returns>asset and amount data</returns>
     public AssetValueData UnblindTxOut(uint txoutIndex, Privkey blindingKey)
     {
+      if (blindingKey is null)
+      {
+        throw new ArgumentNullException(nameof(blindingKey));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdUnblindTxOut(
+        var ret = NativeMethods.CfdUnblindTxOut(
             handle.GetHandle(), tx,
             txoutIndex,
             blindingKey.ToHexString(),
@@ -617,9 +853,17 @@ namespace Cfd
     /// <returns>issuance asset data</returns>
     public UnblindIssuanceData UnblindIssuance(uint txinIndex, Privkey assetBlindingKey, Privkey tokenBlindingKey)
     {
+      if (assetBlindingKey is null)
+      {
+        throw new ArgumentNullException(nameof(assetBlindingKey));
+      }
+      if (tokenBlindingKey is null)
+      {
+        throw new ArgumentNullException(nameof(tokenBlindingKey));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdUnblindIssuance(
+        var ret = NativeMethods.CfdUnblindIssuance(
             handle.GetHandle(), tx,
             txinIndex,
             assetBlindingKey.ToHexString(),
@@ -761,9 +1005,13 @@ namespace Cfd
     /// <returns>transaction input index.</returns>
     public uint GetTxInIndex(OutPoint outpoint)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdGetConfidentialTxInIndex(
+        var ret = NativeMethods.CfdGetConfidentialTxInIndex(
             handle.GetHandle(), tx,
             outpoint.GetTxid().ToHexString(),
             outpoint.GetVout(),
@@ -783,9 +1031,13 @@ namespace Cfd
     /// <returns>transaction output index.</returns>
     public uint GetTxOutIndex(Address address)
     {
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdGetConfidentialTxOutIndex(
+        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
             handle.GetHandle(), tx,
             address.ToAddressString(),
             "",
@@ -805,9 +1057,13 @@ namespace Cfd
     /// <returns>transaction output index.</returns>
     public uint GetTxOutIndex(ConfidentialAddress address)
     {
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdGetConfidentialTxOutIndex(
+        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
             handle.GetHandle(), tx,
             address.ToAddressString(),
             "",
@@ -827,9 +1083,13 @@ namespace Cfd
     /// <returns>transaction output index.</returns>
     public uint GetTxOutIndex(Script script)
     {
+      if (script is null)
+      {
+        throw new ArgumentNullException(nameof(script));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdGetConfidentialTxOutIndex(
+        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
             handle.GetHandle(), tx,
             "",
             script.ToHexString(),
@@ -845,15 +1105,31 @@ namespace Cfd
     public ByteData GetSignatureHash(OutPoint outpoint, CfdHashType hashType,
         Pubkey pubkey, ConfidentialValue value, SignatureHashType sighashType)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       return GetSignatureHash(outpoint.GetTxid(), outpoint.GetVout(), hashType, pubkey, value, sighashType);
     }
 
     public ByteData GetSignatureHash(Txid txid, uint vout, CfdHashType hashType,
         Pubkey pubkey, ConfidentialValue value, SignatureHashType sighashType)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
+      if (value is null)
+      {
+        throw new ArgumentNullException(nameof(value));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdCreateConfidentialSighash(
+        var ret = NativeMethods.CfdCreateConfidentialSighash(
             handle.GetHandle(), tx, txid.ToHexString(), vout, (int)hashType,
             pubkey.ToHexString(), "",
             value.GetSatoshiValue(),
@@ -872,15 +1148,31 @@ namespace Cfd
     public ByteData GetSignatureHash(OutPoint outpoint, CfdHashType hashType,
         Script redeemScript, ConfidentialValue value, SignatureHashType sighashType)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       return GetSignatureHash(outpoint.GetTxid(), outpoint.GetVout(), hashType, redeemScript, value, sighashType);
     }
 
     public ByteData GetSignatureHash(Txid txid, uint vout, CfdHashType hashType,
         Script redeemScript, ConfidentialValue value, SignatureHashType sighashType)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (redeemScript is null)
+      {
+        throw new ArgumentNullException(nameof(redeemScript));
+      }
+      if (value is null)
+      {
+        throw new ArgumentNullException(nameof(value));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdCreateConfidentialSighash(
+        var ret = NativeMethods.CfdCreateConfidentialSighash(
             handle.GetHandle(), tx, txid.ToHexString(), vout, (int)hashType,
             "", redeemScript.ToHexString(),
             value.GetSatoshiValue(),
@@ -899,6 +1191,14 @@ namespace Cfd
     public void AddSignWithPrivkeySimple(OutPoint outpoint, CfdHashType hashType,
         Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR = true)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      if (privkey is null)
+      {
+        throw new ArgumentNullException(nameof(privkey));
+      }
       AddSignWithPrivkeySimple(outpoint.GetTxid(), outpoint.GetVout(), hashType, privkey.GetPubkey(),
         privkey, value, sighashType, hasGrindR);
     }
@@ -906,15 +1206,35 @@ namespace Cfd
     public void AddSignWithPrivkeySimple(Txid txid, uint vout, CfdHashType hashType,
         Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR = true)
     {
+      if (privkey is null)
+      {
+        throw new ArgumentNullException(nameof(privkey));
+      }
       AddSignWithPrivkeySimple(txid, vout, hashType, privkey.GetPubkey(), privkey, value, sighashType, hasGrindR);
     }
 
     public void AddSignWithPrivkeySimple(Txid txid, uint vout, CfdHashType hashType, Pubkey pubkey,
         Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR = true)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
+      if (privkey is null)
+      {
+        throw new ArgumentNullException(nameof(privkey));
+      }
+      if (value is null)
+      {
+        throw new ArgumentNullException(nameof(value));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdAddConfidentialTxSignWithPrivkeySimple(
+        var ret = NativeMethods.CfdAddConfidentialTxSignWithPrivkeySimple(
             handle.GetHandle(), tx, txid.ToHexString(), vout, (int)hashType,
             pubkey.ToHexString(),
             (privkey.ToHexString().Length > 0) ? privkey.ToHexString() : privkey.GetWif(),
@@ -933,14 +1253,30 @@ namespace Cfd
 
     public void AddPubkeySign(OutPoint outpoint, CfdHashType hashType, Pubkey pubkey, SignParameter signature)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       AddPubkeySign(outpoint.GetTxid(), outpoint.GetVout(), hashType, pubkey, signature);
     }
 
     public void AddPubkeySign(Txid txid, uint vout, CfdHashType hashType, Pubkey pubkey, SignParameter signature)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CTransaction.CfdAddPubkeyHashSign(
+        var ret = NativeMethods.CfdAddPubkeyHashSign(
             handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
             tx, txid.ToHexString(), vout, (int)hashType,
             pubkey.ToHexString(), signature.ToHexString(),
@@ -958,14 +1294,30 @@ namespace Cfd
 
     public void AddMultisigSign(OutPoint outpoint, CfdHashType hashType, SignParameter[] signList, Script redeemScript)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       AddMultisigSign(outpoint.GetTxid(), outpoint.GetVout(), hashType, signList, redeemScript);
     }
 
     public void AddMultisigSign(Txid txid, uint vout, CfdHashType hashType, SignParameter[] signList, Script redeemScript)
     {
+      if (signList is null)
+      {
+        throw new ArgumentNullException(nameof(signList));
+      }
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (redeemScript is null)
+      {
+        throw new ArgumentNullException(nameof(redeemScript));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CTransaction.CfdInitializeMultisigSign(
+        var ret = NativeMethods.CfdInitializeMultisigSign(
             handle.GetHandle(), out IntPtr multiSignHandle);
         if (ret != CfdErrorCode.Success)
         {
@@ -977,7 +1329,7 @@ namespace Cfd
           {
             if (signList[index].IsDerEncode())
             {
-              ret = CTransaction.CfdAddMultisigSignDataToDer(
+              ret = NativeMethods.CfdAddMultisigSignDataToDer(
                 handle.GetHandle(), multiSignHandle,
                 signList[index].ToHexString(),
                 (int)signList[index].GetSignatureHashType().SighashType,
@@ -986,14 +1338,14 @@ namespace Cfd
             }
             else
             {
-              ret = CTransaction.CfdAddMultisigSignData(
+              ret = NativeMethods.CfdAddMultisigSignData(
                 handle.GetHandle(), multiSignHandle,
                 signList[index].ToHexString(),
                 signList[index].GetRelatedPubkey().ToHexString());
             }
           }
 
-          ret = CTransaction.CfdFinalizeMultisigSign(
+          ret = NativeMethods.CfdFinalizeMultisigSign(
               handle.GetHandle(), multiSignHandle, (int)CfdNetworkType.Liquidv1,
               tx, txid.ToHexString(), vout, (int)hashType,
               redeemScript.ToHexString(), out IntPtr txString);
@@ -1005,18 +1357,34 @@ namespace Cfd
         }
         finally
         {
-          CTransaction.CfdFreeMultisigSignHandle(handle.GetHandle(), multiSignHandle);
+          NativeMethods.CfdFreeMultisigSignHandle(handle.GetHandle(), multiSignHandle);
         }
       }
     }
 
     public void AddScriptSign(OutPoint outpoint, CfdHashType hashType, SignParameter[] signList, Script redeemScript)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       AddScriptSign(outpoint.GetTxid(), outpoint.GetVout(), hashType, signList, redeemScript);
     }
 
     public void AddScriptSign(Txid txid, uint vout, CfdHashType hashType, SignParameter[] signList, Script redeemScript)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (signList is null)
+      {
+        throw new ArgumentNullException(nameof(signList));
+      }
+      if (redeemScript is null)
+      {
+        throw new ArgumentNullException(nameof(redeemScript));
+      }
       using (var handle = new ErrorHandle())
       {
         CfdErrorCode ret;
@@ -1025,7 +1393,7 @@ namespace Cfd
         string tempTx = tx;
         for (uint index = 0; index < signList.Length; ++index)
         {
-          ret = CTransaction.CfdAddTxSign(
+          ret = NativeMethods.CfdAddTxSign(
               handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
               tempTx, txid.ToHexString(), vout, (int)hashType,
               signList[index].ToHexString(),
@@ -1041,7 +1409,7 @@ namespace Cfd
           clearStack = false;
         }
 
-        ret = CTransaction.CfdAddScriptHashSign(
+        ret = NativeMethods.CfdAddScriptHashSign(
             handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
             tempTx, txid.ToHexString(), vout, (int)hashType,
             redeemScript.ToHexString(), false, out txString);
@@ -1055,9 +1423,17 @@ namespace Cfd
 
     public void AddSign(Txid txid, uint vout, CfdHashType hashType, SignParameter signData, bool clearStack)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (signData is null)
+      {
+        throw new ArgumentNullException(nameof(signData));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CTransaction.CfdAddTxSign(
+        var ret = NativeMethods.CfdAddTxSign(
             handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
             tx, txid.ToHexString(), vout, (int)hashType,
             signData.ToHexString(), signData.IsDerEncode(),
@@ -1074,14 +1450,30 @@ namespace Cfd
 
     public void VerifySign(OutPoint outpoint, Address address, CfdAddressType addressType, ConfidentialValue value)
     {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
       VerifySign(outpoint.GetTxid(), outpoint.GetVout(), address, addressType, value);
     }
 
     public bool VerifySign(Txid txid, uint vout, Address address, CfdAddressType addressType, ConfidentialValue value)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
+      if (value is null)
+      {
+        throw new ArgumentNullException(nameof(value));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdVerifyConfidentialTxSign(
+        var ret = NativeMethods.CfdVerifyConfidentialTxSign(
             handle.GetHandle(), tx, txid.ToHexString(), vout,
             address.ToAddressString(), (int)addressType, "",
             value.GetSatoshiValue(),
@@ -1101,9 +1493,25 @@ namespace Cfd
     public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType,
         ByteData signature, Pubkey pubkey, SignatureHashType sighashType, ConfidentialValue value)
     {
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (value is null)
+      {
+        throw new ArgumentNullException(nameof(value));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdVerifyConfidentialTxSignature(
+        var ret = NativeMethods.CfdVerifyConfidentialTxSignature(
             handle.GetHandle(), tx, signature.ToHexString(), pubkey.ToHexString(), "",
             txid.ToHexString(), vout,
             (int)sighashType.SighashType, sighashType.IsSighashAnyoneCanPay,
@@ -1125,9 +1533,25 @@ namespace Cfd
     public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType,
         ByteData signature, Script redeemScript, SignatureHashType sighashType, ConfidentialValue value)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (value is null)
+      {
+        throw new ArgumentNullException(nameof(value));
+      }
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
+      if (redeemScript is null)
+      {
+        throw new ArgumentNullException(nameof(redeemScript));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdVerifyConfidentialTxSignature(
+        var ret = NativeMethods.CfdVerifyConfidentialTxSignature(
             handle.GetHandle(), tx, signature.ToHexString(), "", redeemScript.ToHexString(),
             txid.ToHexString(), vout,
             (int)sighashType.SighashType, sighashType.IsSighashAnyoneCanPay,
@@ -1207,9 +1631,17 @@ namespace Cfd
     public static Privkey GetIssuanceBlindingKey(
         Privkey masterBlindingKey, Txid txid, uint vout)
     {
+      if (masterBlindingKey is null)
+      {
+        throw new ArgumentNullException(nameof(masterBlindingKey));
+      }
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdGetIssuanceBlindingKey(
+        var ret = NativeMethods.CfdGetIssuanceBlindingKey(
             handle.GetHandle(),
             masterBlindingKey.ToHexString(),
             txid.ToHexString(),
@@ -1232,7 +1664,7 @@ namespace Cfd
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = CElementsTransaction.CfdGetConfidentialTxInfo(
+        var ret = NativeMethods.CfdGetConfidentialTxInfo(
             handle.GetHandle(),
             tx,
             out IntPtr outputTxid,
@@ -1261,7 +1693,7 @@ namespace Cfd
 
     private ConfidentialTxIn GetInputByIndex(ErrorHandle handle, uint index)
     {
-      var ret = CElementsTransaction.CfdGetConfidentialTxIn(
+      var ret = NativeMethods.CfdGetConfidentialTxIn(
           handle.GetHandle(), tx, index,
           out IntPtr outTxid,
           out uint vout,
@@ -1274,7 +1706,7 @@ namespace Cfd
       var txid = CCommon.ConvertToString(outTxid);
       var scriptSig = CCommon.ConvertToString(outScriptSig);
 
-      ret = CElementsTransaction.CfdGetConfidentialTxInWitnessCount(
+      ret = NativeMethods.CfdGetConfidentialTxInWitnessCount(
           handle.GetHandle(), tx, index,
           out uint witnessCount);
       if (ret != CfdErrorCode.Success)
@@ -1285,7 +1717,7 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < witnessCount; ++witnessIndex)
       {
-        ret = CElementsTransaction.CfdGetConfidentialTxInWitness(
+        ret = NativeMethods.CfdGetConfidentialTxInWitness(
             handle.GetHandle(), tx, index, witnessIndex,
             out IntPtr stackData);
         if (ret != CfdErrorCode.Success)
@@ -1295,7 +1727,7 @@ namespace Cfd
         witnessArray[witnessIndex] = CCommon.ConvertToString(stackData);
       }
 
-      ret = CElementsTransaction.CfdGetTxInIssuanceInfo(
+      ret = NativeMethods.CfdGetTxInIssuanceInfo(
           handle.GetHandle(), tx, index,
           out IntPtr outEntropy,
           out IntPtr outNonce,
@@ -1321,7 +1753,7 @@ namespace Cfd
       var nonceBytes = StringUtil.ToBytes(nonce);
       nonceBytes = CfdCommon.ReverseBytes(nonceBytes);
 
-      ret = CElementsTransaction.CfdGetConfidentialTxInPeginWitnessCount(
+      ret = NativeMethods.CfdGetConfidentialTxInPeginWitnessCount(
           handle.GetHandle(), tx, index,
           out uint peginCount);
       if (ret != CfdErrorCode.Success)
@@ -1332,7 +1764,7 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < peginCount; ++witnessIndex)
       {
-        ret = CElementsTransaction.CfdGetConfidentialTxInPeginWitness(
+        ret = NativeMethods.CfdGetConfidentialTxInPeginWitness(
             handle.GetHandle(), tx, index, witnessIndex,
             out IntPtr stackData);
         if (ret != CfdErrorCode.Success)
@@ -1354,7 +1786,7 @@ namespace Cfd
 
     private uint GetInputCount(ErrorHandle handle)
     {
-      var ret = CElementsTransaction.CfdGetConfidentialTxInCount(
+      var ret = NativeMethods.CfdGetConfidentialTxInCount(
           handle.GetHandle(), tx, out uint count);
       if (ret != CfdErrorCode.Success)
       {
@@ -1365,7 +1797,7 @@ namespace Cfd
 
     private ConfidentialTxOut GetOutputByIndex(ErrorHandle handle, uint index)
     {
-      var ret = CElementsTransaction.CfdGetConfidentialTxOut(
+      var ret = NativeMethods.CfdGetConfidentialTxOut(
           handle.GetHandle(), tx, index,
           out IntPtr assetString,
           out long satoshi,
@@ -1395,7 +1827,7 @@ namespace Cfd
 
     private uint GetOutputCount(ErrorHandle handle)
     {
-      var ret = CElementsTransaction.CfdGetConfidentialTxOutCount(
+      var ret = NativeMethods.CfdGetConfidentialTxOutCount(
           handle.GetHandle(), tx, out uint count);
       if (ret != CfdErrorCode.Success)
       {

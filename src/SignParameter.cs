@@ -17,9 +17,13 @@ namespace Cfd
 
     public static ByteData EncodeToDer(ByteData signature, SignatureHashType sighashType)
     {
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CKey.CfdEncodeSignatureByDer(
+        var ret = NativeMethods.CfdEncodeSignatureByDer(
             handle.GetHandle(), signature.ToHexString(),
             (int)sighashType.SighashType,
             sighashType.IsSighashAnyoneCanPay,
@@ -34,9 +38,13 @@ namespace Cfd
 
     public static ByteData DecodeFromDer(ByteData derSignature, out SignatureHashType sighashType)
     {
+      if (derSignature is null)
+      {
+        throw new ArgumentNullException(nameof(derSignature));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CKey.CfdDecodeSignatureFromDer(
+        var ret = NativeMethods.CfdDecodeSignatureFromDer(
             handle.GetHandle(), derSignature.ToHexString(),
             out IntPtr signature,
             out int signatureHashType,

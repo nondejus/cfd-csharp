@@ -50,7 +50,7 @@ namespace Cfd
 
     public bool Equals(OutPoint obj)
     {
-      if (Object.ReferenceEquals(obj, null))
+      if (obj is null)
       {
         return false;
       }
@@ -74,9 +74,9 @@ namespace Cfd
 
     public static bool operator ==(OutPoint lhs, OutPoint rhs)
     {
-      if (Object.ReferenceEquals(lhs, null))
+      if (lhs is null)
       {
-        if (Object.ReferenceEquals(rhs, null))
+        if (rhs is null)
         {
           return true;
         }

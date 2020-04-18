@@ -120,9 +120,13 @@ namespace Cfd
     /// <returns></returns>
     public SignParameter CalculateEcSignature(ByteData sighash, bool hasGrindR = true)
     {
+      if (sighash is null)
+      {
+        throw new ArgumentNullException(nameof(sighash));
+      }
       using (var handle = new ErrorHandle())
       {
-        var ret = CKey.CfdCalculateEcSignature(
+        var ret = NativeMethods.CfdCalculateEcSignature(
             handle.GetHandle(), sighash.ToHexString(),
             privkey, privkeyWif, (int)networkType, hasGrindR,
             out IntPtr signatureHex);
@@ -145,7 +149,7 @@ namespace Cfd
         CfdErrorCode ret;
         if (!String.IsNullOrEmpty(wif))
         {
-          ret = CKey.CfdParsePrivkeyWif(
+          ret = NativeMethods.CfdParsePrivkeyWif(
             handle.GetHandle(), wif,
             out IntPtr tempPrivkeyHex,
             out int tempNetworkType,
@@ -158,7 +162,7 @@ namespace Cfd
           networkType = (CfdNetworkType)tempNetworkType;
         }
 
-        ret = CKey.CfdGetPubkeyFromPrivkey(
+        ret = NativeMethods.CfdGetPubkeyFromPrivkey(
           handle.GetHandle(), privkeyHex, wif, isCompressPubkey,
           out IntPtr pubkeyHex);
         if (ret != CfdErrorCode.Success)

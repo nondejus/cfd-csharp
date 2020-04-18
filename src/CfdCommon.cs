@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 
 /// <summary>
@@ -62,7 +63,7 @@ namespace Cfd
       var errorMessage = message;
       if (String.IsNullOrEmpty(errorMessage))
       {
-        errorMessage = String.Format("CFD error[{0}]", errorCode);
+        errorMessage = String.Format(CultureInfo.InvariantCulture, "CFD error[{0}]", errorCode);
       }
       switch (errorCode)
       {

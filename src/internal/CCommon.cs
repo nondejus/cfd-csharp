@@ -21,22 +21,26 @@ namespace Cfd
       return result;
     }
 
-    public static CfdErrorCode CfdInitialize() {
+    public static CfdErrorCode CfdInitialize()
+    {
       return NativeMethods.CfdInitialize();
     }
 
     internal static CfdErrorCode CfdCreateSimpleHandle(
-        [Out] out IntPtr handle) {
+        [Out] out IntPtr handle)
+    {
       return NativeMethods.CfdCreateSimpleHandle(out handle);
     }
 
-    internal static CfdErrorCode CfdFreeHandle([In] IntPtr handle) {
+    internal static CfdErrorCode CfdFreeHandle([In] IntPtr handle)
+    {
       return NativeMethods.CfdFreeHandle(handle);
     }
 
     internal static CfdErrorCode CfdGetLastErrorMessage(
         [In] IntPtr handle,
-        [Out] out IntPtr message) {
+        [Out] out IntPtr message)
+    {
       return NativeMethods.CfdGetLastErrorMessage(handle, out message);
     }
 
@@ -44,7 +48,8 @@ namespace Cfd
         [In] IntPtr handle,
         [In] string requestName,
         [In] string requestJsonString,
-        [Out] out IntPtr responseJsonString) {
+        [Out] out IntPtr responseJsonString)
+    {
       return NativeMethods.CfdRequestExecuteJson(handle, requestName,
           requestJsonString, out responseJsonString);
     }
@@ -52,7 +57,8 @@ namespace Cfd
     internal static CfdErrorCode CfdSerializeByteData(
         [In] IntPtr handle,
         [In] string buffer,
-        [Out] out IntPtr output) {
+        [Out] out IntPtr output)
+    {
       return NativeMethods.CfdSerializeByteData(handle, buffer, out output);
     }
   }

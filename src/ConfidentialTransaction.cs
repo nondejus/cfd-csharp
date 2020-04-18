@@ -336,7 +336,7 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = scriptSig;
-      this.Sequence = (UInt32) CfdSequenceLockTime.Disable;
+      this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
       this.WitnessStack = witnessStack;
       this.PeginWitness = peginWitness;
       this.Issuance = issuance;

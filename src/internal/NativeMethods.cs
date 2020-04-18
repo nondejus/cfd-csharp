@@ -1098,7 +1098,7 @@ namespace Cfd
         [Out] out uint weight,
         [Out] out uint version,
         [Out] out uint locktime);
-      
+
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdGetTxIn(
         [In] IntPtr handle,
@@ -1134,7 +1134,7 @@ namespace Cfd
         [In] int networkType,
         [In] string txHexString,
         [Out] out uint count);
-      
+
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdGetTxInWitnessCount(
         [In] IntPtr handle,
@@ -1149,7 +1149,7 @@ namespace Cfd
         [In] int networkType,
         [In] string txHexString,
         [Out] out uint count);
-      
+
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdGetTxInIndex(
         [In] IntPtr handle,

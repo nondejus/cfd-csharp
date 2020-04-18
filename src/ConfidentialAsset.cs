@@ -18,7 +18,11 @@ namespace Cfd
 
     public ConfidentialAsset(string asset)
     {
-      if ((asset == null) || ((asset.Length != Size * 2) && (asset.Length != CommitmentSize * 2)))
+      if (asset is null)
+      {
+        throw new ArgumentNullException(nameof(asset));
+      }
+      if ((asset.Length != Size * 2) && (asset.Length != CommitmentSize * 2))
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to asset size.");
       }
@@ -27,7 +31,11 @@ namespace Cfd
 
     public ConfidentialAsset(byte[] asset)
     {
-      if ((asset == null) || ((asset.Length != Size) && (asset.Length != CommitmentSize)))
+      if (asset is null)
+      {
+        throw new ArgumentNullException(nameof(asset));
+      }
+      if ((asset.Length != Size) && (asset.Length != CommitmentSize))
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to asset size.");
       }

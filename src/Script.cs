@@ -7,7 +7,7 @@ namespace Cfd
 {
   public class Script
   {
-    public const uint MaxSize = 65535;
+    public static readonly uint MaxSize = 65535;
     private readonly string script;
     private readonly string[] scriptItems;
 

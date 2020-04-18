@@ -10,7 +10,7 @@ namespace Cfd
   /// </summary>
   public class Privkey
   {
-    public const uint Size = 32;
+    public static readonly uint Size = 32;
     private string privkey;
     private readonly string privkeyWif;
     private CfdNetworkType networkType;
@@ -53,7 +53,7 @@ namespace Cfd
       {
         privkeyHex = "";
       }
-      else if ((privkeyHex == null) || (privkeyHex.Length != Size * 2))
+      else if (privkeyHex.Length != Size * 2)
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to privkey size.");
       }
@@ -118,7 +118,18 @@ namespace Cfd
     /// <param name="sighash">signature hash.</param>
     /// <param name="hasGrindR">use grind-R.</param>
     /// <returns></returns>
-    public SignParameter CalculateEcSignature(ByteData sighash, bool hasGrindR = true)
+    public SignParameter CalculateEcSignature(ByteData sighash)
+    {
+      return CalculateEcSignature(sighash, true);
+    }
+
+    /// <summary>
+    /// Calculate ec-signature.
+    /// </summary>
+    /// <param name="sighash">signature hash.</param>
+    /// <param name="hasGrindR">use grind-R.</param>
+    /// <returns></returns>
+    public SignParameter CalculateEcSignature(ByteData sighash, bool hasGrindR)
     {
       if (sighash is null)
       {

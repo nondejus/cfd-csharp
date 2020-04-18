@@ -10,7 +10,7 @@ namespace Cfd
   /// </summary>
   public class Txid : IEquatable<Txid>
   {
-    public const uint Size = 32;
+    public static readonly uint Size = 32;
     private readonly string txid;
 
     /// <summary>
@@ -51,23 +51,31 @@ namespace Cfd
       return CfdCommon.ReverseBytes(txidBytes);
     }
 
-    public bool Equals(Txid obj)
+    public bool Equals(Txid other)
+    {
+      if (other is null)
+      {
+        return false;
+      }
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return (txid == other.txid);
+    }
+
+    public override bool Equals(object obj)
     {
       if (obj is null)
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, obj))
+      if (obj is Txid)
       {
-        return true;
+        return this.Equals((Txid)obj);
       }
-
-      return (txid == obj.txid);
-    }
-
-    public override bool Equals(object obj)
-    {
-      return this.Equals(obj as Txid);
+      return false;
     }
 
     public override int GetHashCode()

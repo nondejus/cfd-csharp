@@ -10,7 +10,7 @@ namespace Cfd
   /// </summary>
   public class UtxoData : IEquatable<UtxoData>
   {
-    public const uint Size = 32;
+    public static readonly uint Size = 32;
     private readonly string txid;
 
     /// <summary>
@@ -23,7 +23,11 @@ namespace Cfd
 
     public UtxoData(string txid)
     {
-      if ((txid == null) || (txid.Length != Size * 2))
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (txid.Length != Size * 2)
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to txid size.");
       }
@@ -32,7 +36,11 @@ namespace Cfd
 
     public UtxoData(byte[] bytes)
     {
-      if ((bytes == null) || (bytes.Length != Size))
+      if (bytes is null)
+      {
+        throw new ArgumentNullException(nameof(bytes));
+      }
+      if (bytes.Length != Size)
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to txid size.");
       }
@@ -51,23 +59,31 @@ namespace Cfd
       return CfdCommon.ReverseBytes(txidBytes);
     }
 
-    public bool Equals(UtxoData obj)
+    public bool Equals(UtxoData other)
+    {
+      if (other is null)
+      {
+        return false;
+      }
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return (txid == other.txid);
+    }
+
+    public override bool Equals(object obj)
     {
       if (obj is null)
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, obj))
+      if (obj is UtxoData)
       {
-        return true;
+        return this.Equals((UtxoData)obj);
       }
-
-      return (txid == obj.txid);
-    }
-
-    public override bool Equals(object obj)
-    {
-      return this.Equals(obj as UtxoData);
+      return false;
     }
 
     public override int GetHashCode()

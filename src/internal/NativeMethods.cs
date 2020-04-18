@@ -232,26 +232,21 @@ namespace Cfd
         [In] IntPtr feeHandle);
 
     // Common
-    // [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
-    // static extern int CfdGetSupportedFunction([Out] ulong supportFlag);
+    // TODO: unuse CfdGetSupportedFunction([Out] ulong supportFlag);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdInitialize();
 
-    // [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
-    // static extern int CfdFinalize([In] bool isFinishProcess);
+    // TODO: unuse CfdFinalize([In] bool isFinishProcess);
 
-    // [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
-    // internal static extern CfdErrorCode CfdCreateHandle([Out] out IntPtr handle);
+    // TODO: unuse CfdCreateHandle([Out] out IntPtr handle);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdCreateSimpleHandle([Out] out IntPtr handle);
 
-    // [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
-    // static extern int CfdCloneHandle([In] IntPtr source, [Out] IntPtr handle);
+    // TODO: unuse CfdCloneHandle([In] IntPtr source, [Out] IntPtr handle);
 
-    // [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
-    // static extern int CfdCopyErrorState([In] IntPtr source, [In] IntPtr destination);
+    // TODO: unuse CfdCopyErrorState([In] IntPtr source, [In] IntPtr destination);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdFreeHandle([In] IntPtr handle);
@@ -259,8 +254,7 @@ namespace Cfd
     [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
     internal static extern CfdErrorCode CfdFreeBuffer([In] IntPtr address);
 
-    // [DllImport("cfd", CallingConvention = CallingConvention.Cdecl)]
-    // static extern int CfdGetLastErrorCode([In] IntPtr handle);
+    // TODO: unuse CfdGetLastErrorCode([In] IntPtr handle);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdGetLastErrorMessage(
@@ -542,20 +536,7 @@ namespace Cfd
         [In] bool clearStack,
         [Out] out IntPtr txString);
 
-    /*
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
-    internal static extern CfdErrorCode CfdFinalizeElementsMultisigSign(
-        [In] IntPtr handle,
-        [In] IntPtr multisignHandle,
-        [In] string txHexString,
-        [In] string txid,
-        [In] uint vout,
-        [In] int hashType,
-        [In] string witnessScript,
-        [In] string redeemScript,
-        [In] bool clearStack,
-        [Out] out IntPtr txString);
-    */
+    // TODO: unuse CfdFinalizeElementsMultisigSign
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdAddConfidentialTxSignWithPrivkeySimple(

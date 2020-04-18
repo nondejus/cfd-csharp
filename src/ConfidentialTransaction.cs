@@ -70,18 +70,17 @@ namespace Cfd
 
     public bool Equals(AssetValueData other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return Asset.Equals(other.Asset, StringComparison.Ordinal) &&
         SatoshiValue.Equals(other.SatoshiValue);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is AssetValueData);
+      if (obj is AssetValueData)
+      {
+        return this.Equals((AssetValueData)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -116,18 +115,17 @@ namespace Cfd
 
     public bool Equals(UnblindIssuanceData other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return AssetData.Equals(other.AssetData) &&
         TokenData.Equals(other.TokenData);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is UnblindIssuanceData);
+      if (obj is UnblindIssuanceData)
+      {
+        return this.Equals((UnblindIssuanceData)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -177,18 +175,17 @@ namespace Cfd
 
     public bool Equals(IssuanceKeys other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return AssetKey.Equals(other.AssetKey) &&
         TokenKey.Equals(other.TokenKey);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is IssuanceKeys);
+      if (obj is IssuanceKeys)
+      {
+        return this.Equals((IssuanceKeys)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -238,18 +235,17 @@ namespace Cfd
 
     public bool Equals(IssuanceData other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return BlindingNonce.Equals(other.BlindingNonce) &&
         AssetEntropy.Equals(other.AssetEntropy);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is IssuanceData);
+      if (obj is IssuanceData)
+      {
+        return this.Equals((IssuanceData)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -353,17 +349,16 @@ namespace Cfd
 
     public bool Equals(ConfidentialTxIn other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return OutPoint.Equals(other.OutPoint);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is ConfidentialTxIn);
+      if (obj is ConfidentialTxIn)
+      {
+        return this.Equals((ConfidentialTxIn)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -427,17 +422,16 @@ namespace Cfd
 
     public bool Equals(ConfidentialTxOut other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return ScriptPubkey.Equals(other.ScriptPubkey);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is ConfidentialTxOut);
+      if (obj is ConfidentialTxOut)
+      {
+        return this.Equals((ConfidentialTxOut)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -466,11 +460,35 @@ namespace Cfd
     private string txid = "";
     private string wtxid = "";
     private string witHash = "";
-    private uint txSize = 0;
-    private uint txVsize = 0;
-    private uint txWeight = 0;
-    private uint txVersion = 0;
-    private uint txLocktime = 0;
+    private uint txSize;
+    private uint txVsize;
+    private uint txWeight;
+    private uint txVersion;
+    private uint txLocktime;
+
+    /// <summary>
+    /// Convert tx to decoderawtransaction json string.
+    /// </summary>
+    /// <param name="tx">transaction object.</param>
+    /// <returns>json string</returns>
+    public static string DecodeRawTransaction(
+        ConfidentialTransaction tx)
+    {
+      return DecodeRawTransaction(tx, CfdNetworkType.Liquidv1, CfdNetworkType.Mainnet);
+    }
+
+    /// <summary>
+    /// Convert tx to decoderawtransaction json string.
+    /// </summary>
+    /// <param name="tx">transaction object.</param>
+    /// <param name="network">network type.</param>
+    /// <returns>json string</returns>
+    public static string DecodeRawTransaction(
+        ConfidentialTransaction tx,
+        CfdNetworkType network)
+    {
+      return DecodeRawTransaction(tx, network, CfdNetworkType.Mainnet);
+    }
 
     /// <summary>
     /// Convert tx to decoderawtransaction json string.
@@ -481,8 +499,8 @@ namespace Cfd
     /// <returns>json string</returns>
     public static string DecodeRawTransaction(
         ConfidentialTransaction tx,
-        CfdNetworkType network = CfdNetworkType.Liquidv1,
-        CfdNetworkType mainchainNetwork = CfdNetworkType.Mainnet)
+        CfdNetworkType network,
+        CfdNetworkType mainchainNetwork)
     {
       if (tx is null)
       {
@@ -511,6 +529,10 @@ namespace Cfd
             "ElementsDecodeRawTransaction",
             request,
             out IntPtr responseJsonString);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
         return CCommon.ConvertToString(responseJsonString);
       }
     }
@@ -560,8 +582,18 @@ namespace Cfd
     /// </summary>
     /// <param name="txid">utxo txid.</param>
     /// <param name="vout">utxo vout.</param>
+    public void AddTxIn(Txid txid, uint vout)
+    {
+      AddTxIn(txid, vout, CfdSequenceLockTime.Disable);
+    }
+
+    /// <summary>
+    /// Add transction input.
+    /// </summary>
+    /// <param name="txid">utxo txid.</param>
+    /// <param name="vout">utxo vout.</param>
     /// <param name="sequence">sequence number. (default: 0xffffffff)</param>
-    public void AddTxIn(Txid txid, uint vout, uint sequence = 0xffffffff)
+    public void AddTxIn(Txid txid, uint vout, uint sequence)
     {
       if (txid is null)
       {
@@ -582,10 +614,18 @@ namespace Cfd
     /// <summary>
     /// Add transction input.
     /// </summary>
-    /// <param name="txid">utxo txid.</param>
-    /// <param name="vout">utxo vout.</param>
+    /// <param name="outpoint">outpoint.</param>
+    public void AddTxIn(OutPoint outpoint)
+    {
+      AddTxIn(outpoint, CfdSequenceLockTime.Disable);
+    }
+
+    /// <summary>
+    /// Add transction input.
+    /// </summary>
+    /// <param name="outpoint">outpoint.</param>
     /// <param name="sequence">sequence number. (default: 0xffffffff)</param>
-    public void AddTxIn(OutPoint outpoint, uint sequence = 0xffffffff)
+    public void AddTxIn(OutPoint outpoint, uint sequence)
     {
       if (outpoint is null)
       {
@@ -1189,7 +1229,13 @@ namespace Cfd
     }
 
     public void AddSignWithPrivkeySimple(OutPoint outpoint, CfdHashType hashType,
-        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR = true)
+        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType)
+    {
+      AddSignWithPrivkeySimple(outpoint, hashType, privkey, value, sighashType, true);
+    }
+
+    public void AddSignWithPrivkeySimple(OutPoint outpoint, CfdHashType hashType,
+        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR)
     {
       if (outpoint is null)
       {
@@ -1204,7 +1250,13 @@ namespace Cfd
     }
 
     public void AddSignWithPrivkeySimple(Txid txid, uint vout, CfdHashType hashType,
-        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR = true)
+    Privkey privkey, ConfidentialValue value, SignatureHashType sighashType)
+    {
+      AddSignWithPrivkeySimple(txid, vout, hashType, privkey, value, sighashType, true);
+    }
+
+    public void AddSignWithPrivkeySimple(Txid txid, uint vout, CfdHashType hashType,
+        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR)
     {
       if (privkey is null)
       {
@@ -1214,7 +1266,13 @@ namespace Cfd
     }
 
     public void AddSignWithPrivkeySimple(Txid txid, uint vout, CfdHashType hashType, Pubkey pubkey,
-        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR = true)
+        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType)
+    {
+      AddSignWithPrivkeySimple(txid, vout, hashType, pubkey, privkey, value, sighashType, true);
+    }
+
+    public void AddSignWithPrivkeySimple(Txid txid, uint vout, CfdHashType hashType, Pubkey pubkey,
+        Privkey privkey, ConfidentialValue value, SignatureHashType sighashType, bool hasGrindR)
     {
       if (txid is null)
       {
@@ -1342,6 +1400,10 @@ namespace Cfd
                 handle.GetHandle(), multiSignHandle,
                 signList[index].ToHexString(),
                 signList[index].GetRelatedPubkey().ToHexString());
+            }
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
             }
           }
 
@@ -1703,7 +1765,7 @@ namespace Cfd
       {
         handle.ThrowError(ret);
       }
-      var txid = CCommon.ConvertToString(outTxid);
+      var utxoTxid = CCommon.ConvertToString(outTxid);
       var scriptSig = CCommon.ConvertToString(outScriptSig);
 
       ret = NativeMethods.CfdGetConfidentialTxInWitnessCount(
@@ -1775,7 +1837,7 @@ namespace Cfd
       }
 
       return new ConfidentialTxIn(
-          new OutPoint(txid, vout), sequence, new Script(scriptSig),
+          new OutPoint(utxoTxid, vout), sequence, new Script(scriptSig),
           new ScriptWitness(witnessArray), new ScriptWitness(peginWitness),
           new IssuanceData(nonceBytes, entropyBytes,
               new ConfidentialValue(assetValue, assetAmount),

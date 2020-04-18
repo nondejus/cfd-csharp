@@ -36,7 +36,7 @@ namespace Cfd
       }
     }
 
-    public static ByteData DecodeFromDer(ByteData derSignature, out SignatureHashType sighashType)
+    public static SignParameter DecodeFromDer(ByteData derSignature)
     {
       if (derSignature is null)
       {
@@ -54,8 +54,10 @@ namespace Cfd
           handle.ThrowError(ret);
         }
         string signatureStr = CCommon.ConvertToString(signature);
-        sighashType = new SignatureHashType((CfdSighashType)signatureHashType, sighashAnyoneCanPay);
-        return new ByteData(signatureStr);
+        SignatureHashType sighashType = new SignatureHashType((CfdSighashType)signatureHashType, sighashAnyoneCanPay);
+        SignParameter signParam = new SignParameter(signatureStr);
+        signParam.SetDerEncode(sighashType);
+        return signParam;
       }
     }
 

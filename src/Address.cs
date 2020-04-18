@@ -135,12 +135,9 @@ namespace Cfd
         lockingScript = CCommon.ConvertToString(outputLockingScript);
         p2shSegwitLockingScript = CCommon.ConvertToString(outputP2shSegwitLockingScript);
 
-        Initialize(handle, address, out CfdNetworkType outputNetwork,
-            out CfdWitnessVersion outputWitnessVersion, out string tempLockingScript,
-            out string outputHash);
-        witnessVersion = outputWitnessVersion;
-        hash = outputHash;
-        network = outputNetwork;
+        Initialize(handle, address, out network,
+            out witnessVersion, out string tempLockingScript,
+            out hash);
 
         addressType = type;
       }
@@ -186,7 +183,6 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(inputLockingScript));
       }
-      string address = "";
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdGetAddressFromLockingScript(
@@ -198,9 +194,9 @@ namespace Cfd
         {
           handle.ThrowError(ret);
         }
-        address = CCommon.ConvertToString(outputAddress);
+        string tempAddress = CCommon.ConvertToString(outputAddress);
+        return new Address(tempAddress);
       }
-      return new Address(address);
     }
 
     public string ToAddressString()

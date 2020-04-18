@@ -24,6 +24,10 @@ namespace Cfd
 
     public static string FromBytes(byte[] bytes)
     {
+      if (bytes is null)
+      {
+        throw new ArgumentNullException(nameof(bytes));
+      }
       return BitConverter.ToString(bytes).Replace(
         "-", "", StringComparison.Ordinal)
         .ToLower(CultureInfo.InvariantCulture);

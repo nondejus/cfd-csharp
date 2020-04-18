@@ -50,8 +50,8 @@ namespace Cfd
           {
             handle.ThrowError(ret);
           }
-          string addr = CCommon.ConvertToString(address);
-          string script = CCommon.ConvertToString(redeemScript);
+          CCommon.ConvertToString(address);
+          CCommon.ConvertToString(redeemScript);
           return new Script(CCommon.ConvertToString(witnessScript));
         }
         finally

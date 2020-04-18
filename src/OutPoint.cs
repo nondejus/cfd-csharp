@@ -48,23 +48,31 @@ namespace Cfd
       return vout;
     }
 
-    public bool Equals(OutPoint obj)
+    public bool Equals(OutPoint other)
+    {
+      if (other is null)
+      {
+        return false;
+      }
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+
+      return txid.Equals(other.txid) && (vout == other.vout);
+    }
+
+    public override bool Equals(object obj)
     {
       if (obj is null)
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, obj))
+      if (obj is OutPoint)
       {
-        return true;
+        return this.Equals((OutPoint)obj);
       }
-
-      return txid.Equals(obj.txid) && (vout == obj.vout);
-    }
-
-    public override bool Equals(object obj)
-    {
-      return this.Equals(obj as OutPoint);
+      return false;
     }
 
     public override int GetHashCode()

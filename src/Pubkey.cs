@@ -8,8 +8,8 @@ namespace Cfd
   /// </summary>
   public class Pubkey
   {
-    public const uint UncompressLength = 65;
-    public const uint CompressLength = 33;
+    public static readonly uint UncompressLength = 65;
+    public static readonly uint CompressLength = 33;
     private readonly string pubkey;
 
     /// <summary>

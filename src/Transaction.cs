@@ -10,9 +10,9 @@ namespace Cfd
   public static class CfdSequenceLockTime
   {
     /// disable locktime
-    public const uint Disable = 0xffffffff;
+    public static readonly uint Disable = 0xffffffff;
     /// enable locktime (maximum time)
-    public const uint EnableMax = 0xfffffffe;
+    public static readonly uint EnableMax = 0xfffffffe;
   };
 
   /// <summary>
@@ -42,17 +42,21 @@ namespace Cfd
 
     public bool Equals(SignatureHashType other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return SighashType.Equals(other.SighashType) &&
           (IsSighashAnyoneCanPay == other.IsSighashAnyoneCanPay);
     }
+
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is SignatureHashType);
+      if (obj is null)
+      {
+        return false;
+      }
+      if (obj is SignatureHashType)
+      {
+        return this.Equals((SignatureHashType)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -177,17 +181,20 @@ namespace Cfd
 
     public bool Equals(TxIn other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return OutPoint.Equals(other.OutPoint);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is TxIn);
+      if (obj is null)
+      {
+        return false;
+      }
+      if (obj is TxIn)
+      {
+        return this.Equals((TxIn)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()
@@ -234,17 +241,20 @@ namespace Cfd
 
     public bool Equals(TxOut other)
     {
-      if (Object.ReferenceEquals(this, other))
-      {
-        return true;
-      }
-
       return ScriptPubkey.Equals(other.ScriptPubkey);
     }
 
     public override bool Equals(object obj)
     {
-      return this.Equals(obj is TxOut);
+      if (obj is null)
+      {
+        return false;
+      }
+      if (obj is TxOut)
+      {
+        return this.Equals((TxOut)obj);
+      }
+      return false;
     }
 
     public override int GetHashCode()

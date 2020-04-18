@@ -34,6 +34,14 @@ namespace Cfd
 
     public ConfidentialAddress(Address address, Pubkey confidentialKey)
     {
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
+      if (confidentialKey is null)
+      {
+        throw new ArgumentNullException(nameof(confidentialKey));
+      }
       unconfidenialAddress = address;
       key = confidentialKey;
       using (var handle = new ErrorHandle())

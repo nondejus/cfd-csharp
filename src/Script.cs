@@ -5,11 +5,23 @@ using System;
 /// </summary>
 namespace Cfd
 {
-  public class Script
+  public class Script : IEquatable<Script>
   {
     public static readonly uint MaxSize = 65535;
     private readonly string script;
     private readonly string[] scriptItems;
+
+    public static Script CreateMulisigScript(uint requireNum, Pubkey[] pubkeys)
+    {
+      if (pubkeys is null)
+      {
+        throw new ArgumentNullException(nameof(pubkeys));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        return new Script(CreateMultisig(handle, requireNum, pubkeys));
+      }
+    }
 
     public Script()
     {
@@ -19,7 +31,11 @@ namespace Cfd
 
     public Script(string scriptHex)
     {
-      if ((scriptHex == null) || (scriptHex.Length > MaxSize * 2))
+      if (scriptHex is null)
+      {
+        throw new ArgumentNullException(nameof(scriptHex));
+      }
+      if (scriptHex.Length > MaxSize * 2)
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to script size.");
       }
@@ -32,7 +48,11 @@ namespace Cfd
 
     public Script(byte[] bytes)
     {
-      if ((bytes == null) || (bytes.Length > MaxSize))
+      if (bytes is null)
+      {
+        throw new ArgumentNullException(nameof(bytes));
+      }
+      if (bytes.Length > MaxSize)
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to script size.");
       }
@@ -43,9 +63,43 @@ namespace Cfd
       }
     }
 
-    public Script(uint requireNum, Pubkey[] pubkeys)
+    private static string CreateMultisig(ErrorHandle handle, uint requireNum, Pubkey[] pubkeys)
     {
-      throw new NotImplementedException();  // FIXME not implements
+      var ret = NativeMethods.CfdInitializeMultisigScript(
+        handle.GetHandle(), (int)CfdNetworkType.Mainnet,
+        (int)CfdHashType.P2sh, out IntPtr multisigHandle);
+      if (ret != CfdErrorCode.Success)
+      {
+        handle.ThrowError(ret);
+      }
+      try
+      {
+        foreach (Pubkey pubkey in pubkeys)
+        {
+          ret = NativeMethods.CfdAddMultisigScriptData(
+            handle.GetHandle(), multisigHandle, pubkey.ToHexString());
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+        }
+
+        ret = NativeMethods.CfdFinalizeMultisigScript(
+            handle.GetHandle(), multisigHandle, requireNum, out IntPtr addr,
+            out IntPtr redeemScript, out IntPtr witnessScript);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        CCommon.ConvertToString(addr);
+        CCommon.ConvertToString(witnessScript);
+        return CCommon.ConvertToString(redeemScript);
+      }
+      finally
+      {
+        NativeMethods.CfdFreeMultisigScriptHandle(
+          handle.GetHandle(), multisigHandle);
+      }
     }
 
     private static string[] ParseScript(ErrorHandle handle, string scriptHex)
@@ -104,6 +158,55 @@ namespace Cfd
     public string GetAsm()
     {
       return string.Join(" ", scriptItems);
+    }
+
+    public bool Equals(Script other)
+    {
+      if (other is null)
+      {
+        return false;
+      }
+      if (Object.ReferenceEquals(this, other))
+      {
+        return true;
+      }
+      return script.Equals(other.script, StringComparison.Ordinal);
+    }
+
+    public override bool Equals(object obj)
+    {
+      if (obj is null)
+      {
+        return false;
+      }
+      if ((obj as Script) != null)
+      {
+        return this.Equals((Script)obj);
+      }
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      return script.GetHashCode(StringComparison.Ordinal);
+    }
+
+    public static bool operator ==(Script lhs, Script rhs)
+    {
+      if (lhs is null)
+      {
+        if (rhs is null)
+        {
+          return true;
+        }
+        return false;
+      }
+      return lhs.Equals(rhs);
+    }
+
+    public static bool operator !=(Script lhs, Script rhs)
+    {
+      return !(lhs == rhs);
     }
   }
 }

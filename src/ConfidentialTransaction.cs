@@ -284,7 +284,7 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = new Script();
-      this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
+      this.Sequence = CfdSequenceLockTime.Disable;
       this.WitnessStack = new ScriptWitness();
       this.PeginWitness = new ScriptWitness();
       this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
@@ -308,7 +308,7 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = new Script();
-      this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
+      this.Sequence = CfdSequenceLockTime.Disable;
       this.WitnessStack = scriptWitness;
       this.PeginWitness = new ScriptWitness();
       this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
@@ -332,7 +332,7 @@ namespace Cfd
     {
       this.OutPoint = outPoint;
       this.ScriptSig = scriptSig;
-      this.Sequence = (UInt32)CfdSequenceLockTime.Disable;
+      this.Sequence = CfdSequenceLockTime.Disable;
       this.WitnessStack = witnessStack;
       this.PeginWitness = peginWitness;
       this.Issuance = issuance;

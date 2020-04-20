@@ -71,7 +71,7 @@ namespace Cfd
       {
         return false;
       }
-      if (obj is Txid)
+      if ((obj as Txid) != null)
       {
         return this.Equals((Txid)obj);
       }

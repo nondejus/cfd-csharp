@@ -862,12 +862,14 @@ namespace Cfd
     internal static extern CfdErrorCode CfdInitializeMnemonicWordList(
           [In] IntPtr handle,
           [In] string language,
-          [Out] out IntPtr mnemonicHandle);
+          [Out] out IntPtr mnemonicHandle,
+          [Out] out uint maxIndex);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdGetMnemonicWord(
           [In] IntPtr handle,
           [In] IntPtr mnemonicHandle,
+          [In] uint index,
           [Out] out IntPtr mnemonicWord);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
@@ -876,7 +878,7 @@ namespace Cfd
           [In] IntPtr mnemonicHandle);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-    internal static extern CfdErrorCode ConvertMnemonicToSeed(
+    internal static extern CfdErrorCode CfdConvertMnemonicToSeed(
           [In] IntPtr handle,
           [In] string mnemonic,
           [In] string passphrase,
@@ -887,7 +889,7 @@ namespace Cfd
           [Out] out IntPtr entropy);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-    internal static extern CfdErrorCode ConvertEntropyToMnemonic(
+    internal static extern CfdErrorCode CfdConvertEntropyToMnemonic(
           [In] IntPtr handle,
           [In] string entropy,
           [In] string language,

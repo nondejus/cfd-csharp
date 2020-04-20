@@ -79,7 +79,7 @@ namespace Cfd
       {
         return false;
       }
-      if (obj is UtxoData)
+      if ((obj as UtxoData) != null)
       {
         return this.Equals((UtxoData)obj);
       }

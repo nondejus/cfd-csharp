@@ -15,6 +15,25 @@ namespace Cfd
     private SignatureHashType signatureHashType;
     private Pubkey pubkey;
 
+    public static ByteData NormalizeSignature(ByteData signature)
+    {
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdNormalizeSignature(
+            handle.GetHandle(), signature.ToHexString(),
+            out IntPtr normalizedSignature);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        return new ByteData(CCommon.ConvertToString(normalizedSignature));
+      }
+    }
+
     public static ByteData EncodeToDer(ByteData signature, SignatureHashType sighashType)
     {
       if (signature is null)

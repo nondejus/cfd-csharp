@@ -1,4 +1,5 @@
 using System;
+using System.Net.NetworkInformation;
 
 /// <summary>
 /// cfd library namespace.
@@ -20,6 +21,50 @@ namespace Cfd
       using (var handle = new ErrorHandle())
       {
         return new Script(CreateMultisig(handle, requireNum, pubkeys));
+      }
+    }
+
+    public static Address[] GetMultisigAddresses(Script multisigScript,
+      CfdNetworkType networkType, CfdAddressType addressType
+      )
+    {
+      if (multisigScript is null)
+      {
+        throw new ArgumentNullException(nameof(multisigScript));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdGetAddressesFromMultisig(
+          handle.GetHandle(), multisigScript.ToHexString(), (int)networkType,
+          (int)addressType, out IntPtr multisigHandle, out uint maxKeyNum);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        try
+        {
+          Address[] addrList = new Address[maxKeyNum];
+          for (uint index = 0; index < maxKeyNum; ++index)
+          {
+            ret = NativeMethods.CfdGetAddressFromMultisigKey(
+              handle.GetHandle(), multisigHandle, index,
+              out IntPtr address, out IntPtr pubkey);
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+            CCommon.ConvertToString(pubkey);
+            string addr = CCommon.ConvertToString(address);
+            addrList[index] = new Address(addr);
+          }
+
+          return addrList;
+        }
+        finally
+        {
+          NativeMethods.CfdFreeAddressesMultisigHandle(
+            handle.GetHandle(), multisigHandle);
+        }
       }
     }
 

@@ -17,6 +17,54 @@ namespace Cfd
   }
 
   /// <summary>
+  /// Blind option data.
+  /// </summary>
+  public struct CfdBlindOptionData : IEquatable<CfdBlindOptionData>
+  {
+    public long MinimumRangeValue { get; }
+    public int Exponent { get; }
+    public int MinimumBits { get; }
+
+    public CfdBlindOptionData(long minimumRangeValue, int exponent, int minimumBits)
+    {
+      this.MinimumRangeValue = minimumRangeValue;
+      this.Exponent = exponent;
+      this.MinimumBits = minimumBits;
+    }
+
+    public bool Equals(CfdBlindOptionData other)
+    {
+      return MinimumRangeValue.Equals(other.MinimumRangeValue) &&
+        Exponent.Equals(other.Exponent) &&
+        MinimumBits.Equals(other.MinimumBits);
+    }
+
+    public override bool Equals(object obj)
+    {
+      if (obj is CfdBlindOptionData)
+      {
+        return this.Equals((CfdBlindOptionData)obj);
+      }
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      return MinimumRangeValue.GetHashCode() + Exponent.GetHashCode() + MinimumBits.GetHashCode();
+    }
+
+    public static bool operator ==(CfdBlindOptionData left, CfdBlindOptionData right)
+    {
+      return left.Equals(right);
+    }
+
+    public static bool operator !=(CfdBlindOptionData left, CfdBlindOptionData right)
+    {
+      return !(left == right);
+    }
+  }
+
+  /// <summary>
   /// asset and amountValue data struct.
   /// </summary>
   public struct AssetValueData : IEquatable<AssetValueData>
@@ -850,6 +898,116 @@ namespace Cfd
       }
     }
 
+    public void BlindTransaction(IDictionary<OutPoint, AssetValueData> utxos,
+        IDictionary<OutPoint, IssuanceKeys> issuanceKeys,
+        ConfidentialAddress[] confidentialAddresses)
+    {
+      BlindTransaction(utxos, issuanceKeys, confidentialAddresses,
+        new CfdBlindOptionData(1, 0, 52));
+    }
+
+    public void BlindTransaction(IDictionary<OutPoint, AssetValueData> utxos,
+        IDictionary<OutPoint, IssuanceKeys> issuanceKeys,
+        ConfidentialAddress[] confidentialAddresses, CfdBlindOptionData option)
+    {
+      if (issuanceKeys is null)
+      {
+        throw new ArgumentNullException(nameof(issuanceKeys));
+      }
+      if (confidentialAddresses is null)
+      {
+        throw new ArgumentNullException(nameof(confidentialAddresses));
+      }
+      if (utxos is null)
+      {
+        throw new ArgumentNullException(nameof(utxos));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdInitializeBlindTx(
+          handle.GetHandle(), out IntPtr blindHandle);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        try
+        {
+          ret = NativeMethods.CfdSetBlindTxOption(
+            handle.GetHandle(), blindHandle, (int)CfdBlindOption.MinimumRangeValue,
+            option.MinimumRangeValue);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          ret = NativeMethods.CfdSetBlindTxOption(
+            handle.GetHandle(), blindHandle, (int)CfdBlindOption.Exponent,
+            option.Exponent);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          ret = NativeMethods.CfdSetBlindTxOption(
+            handle.GetHandle(), blindHandle, (int)CfdBlindOption.MinimumBits,
+            option.MinimumBits);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+
+          foreach (var outpoint in utxos.Keys)
+          {
+            var data = utxos[outpoint];
+            string assetKey = "";
+            string tokenKey = "";
+            if (issuanceKeys.ContainsKey(outpoint))
+            {
+              IssuanceKeys keys = issuanceKeys[outpoint];
+              assetKey = keys.AssetKey.ToHexString();
+              tokenKey = keys.TokenKey.ToHexString();
+            }
+
+            ret = NativeMethods.CfdAddBlindTxInData(
+              handle.GetHandle(), blindHandle,
+              outpoint.GetTxid().ToHexString(), outpoint.GetVout(),
+              data.Asset,
+              data.AssetBlindFactor.ToHexString(),
+              data.AmountBlindFactor.ToHexString(),
+              data.SatoshiValue,
+              assetKey,
+              tokenKey);
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+          }
+
+          foreach (var address in confidentialAddresses)
+          {
+            ret = NativeMethods.CfdAddBlindTxOutByAddress(
+              handle.GetHandle(), blindHandle,
+              address.ToAddressString());
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+          }
+
+          ret = NativeMethods.CfdFinalizeBlindTx(
+            handle.GetHandle(), blindHandle, tx,
+            out IntPtr txHexString);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          tx = CCommon.ConvertToString(txHexString);
+        }
+        finally
+        {
+          NativeMethods.CfdFreeBlindHandle(handle.GetHandle(), blindHandle);
+        }
+      }
+    }
+
     /// <summary>
     /// Unblind transction output.
     /// </summary>
@@ -1630,6 +1788,60 @@ namespace Cfd
         }
       }
       return false;
+    }
+
+    public void EstimateFee()
+    {
+      // FIXME 実装する
+      /*
+      internal static extern CfdErrorCode CfdInitializeEstimateFee(
+        [In] IntPtr handle,
+        [Out] out IntPtr feeHandle,
+        [In] bool isElements);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdAddTxInForEstimateFee(
+        [In] IntPtr handle,
+        [In] IntPtr feeHandle,
+        [In] string txid,
+        [In] uint vout,
+        [In] string descriptor,
+        [In] string asset,
+        [In] bool isIssuance,
+        [In] bool isBlindIssuance,
+        [In] bool isPegin,
+        [In] uint peginBtcTxSize,
+        [In] string fedpegScript);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdFinalizeEstimateFee(
+        [In] IntPtr handle,
+        [In] IntPtr feeHandle,
+        [In] string txHex,
+        [In] string feeAsset,
+        [Out] out long txFee,
+        [Out] out long utxoFee,
+        [In] bool isBlind,
+        [In] double effectiveFeeRate);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdFreeEstimateFeeHandle(
+        [In] IntPtr handle,
+        [In] IntPtr feeHandle);
+    */
+    }
+
+    public void UpdateFee()
+    {
+      // FIXME
+      // CfdUpdateConfidentialTxOut
+    }
+
+    public void SetRawReissueAsset()
+    {
+      // FIXME
+      // CfdSetRawReissueAsset
+
     }
 
     public string ToHexString()

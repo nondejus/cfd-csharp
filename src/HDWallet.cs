@@ -6,6 +6,7 @@ using System.Globalization;
 /// </summary>
 namespace Cfd
 {
+  // FIXME Implementation is incomplete
   public class HDWallet : IEquatable<HDWallet>
   {
     private readonly ByteData seed;

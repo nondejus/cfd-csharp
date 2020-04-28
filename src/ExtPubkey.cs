@@ -47,6 +47,77 @@ namespace Cfd
       }
     }
 
+    public ExtPubkey(Pubkey parentPubkey, Pubkey pubkey, ByteData chainCode,
+      uint depth, uint childNumber)
+    {
+      if (parentPubkey is null)
+      {
+        throw new ArgumentNullException(nameof(parentPubkey));
+      }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
+      if (chainCode is null)
+      {
+        throw new ArgumentNullException(nameof(chainCode));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdCreateExtkey(
+          handle.GetHandle(), (int)CfdExtKeyType.Pubkey, parentPubkey.ToHexString(), "",
+          pubkey.ToHexString(), chainCode.ToHexString(), (byte)depth, childNumber,
+          out IntPtr tempExtkey);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        extkey = CCommon.ConvertToString(tempExtkey);
+        this.pubkey = pubkey;
+        this.chainCode = chainCode;
+        this.depth = depth;
+        this.childNumber = childNumber;
+        GetExtkeyInformation(handle, extkey, out version, out fingerprint,
+          out _, out _, out _, out networkType);
+      }
+    }
+
+    public ExtPubkey(ByteData fingerprint, Pubkey pubkey, ByteData chainCode,
+      uint depth, uint childNumber)
+    {
+      if (fingerprint is null)
+      {
+        throw new ArgumentNullException(nameof(fingerprint));
+      }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
+      if (chainCode is null)
+      {
+        throw new ArgumentNullException(nameof(chainCode));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdCreateExtkey(
+          handle.GetHandle(), (int)CfdExtKeyType.Pubkey, "", fingerprint.ToHexString(),
+          pubkey.ToHexString(), chainCode.ToHexString(), (byte)depth, childNumber,
+          out IntPtr tempExtkey);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        extkey = CCommon.ConvertToString(tempExtkey);
+        this.fingerprint = fingerprint;
+        this.pubkey = pubkey;
+        this.chainCode = chainCode;
+        this.depth = depth;
+        this.childNumber = childNumber;
+        GetExtkeyInformation(handle, extkey, out version, out _,
+          out _, out _, out _, out networkType);
+      }
+    }
+
     public ExtPubkey DerivePubkey(uint childNumber)
     {
       using (var handle = new ErrorHandle())

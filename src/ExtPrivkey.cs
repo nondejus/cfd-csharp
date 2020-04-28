@@ -245,7 +245,7 @@ namespace Cfd
       }
       CCommon.ConvertToString(privkeyHex);
       string privkeyWif = CCommon.ConvertToString(wif);
-      return new Privkey(privkeyWif, true);
+      return new Privkey(privkeyWif);
     }
 
     public bool Equals(ExtPrivkey other)

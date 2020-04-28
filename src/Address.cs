@@ -91,6 +91,28 @@ namespace Cfd
     private CfdAddressType addressType;
     private readonly CfdWitnessVersion witnessVersion;
 
+    public static Address GetAddressByLockingScript(Script inputLockingScript, CfdNetworkType network)
+    {
+      if (inputLockingScript is null)
+      {
+        throw new ArgumentNullException(nameof(inputLockingScript));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdGetAddressFromLockingScript(
+          handle.GetHandle(),
+          inputLockingScript.ToHexString(),
+          (int)network,
+          out IntPtr outputAddress);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        string tempAddress = CCommon.ConvertToString(outputAddress);
+        return new Address(tempAddress);
+      }
+    }
+
     public Address()
     {
     }
@@ -174,28 +196,6 @@ namespace Cfd
 
         network = networkType;
         addressType = type;
-      }
-    }
-
-    public static Address GetAddressByLockingScript(Script inputLockingScript, CfdNetworkType network)
-    {
-      if (inputLockingScript is null)
-      {
-        throw new ArgumentNullException(nameof(inputLockingScript));
-      }
-      using (var handle = new ErrorHandle())
-      {
-        var ret = NativeMethods.CfdGetAddressFromLockingScript(
-          handle.GetHandle(),
-          inputLockingScript.ToHexString(),
-          (int)network,
-          out IntPtr outputAddress);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        string tempAddress = CCommon.ConvertToString(outputAddress);
-        return new Address(tempAddress);
       }
     }
 

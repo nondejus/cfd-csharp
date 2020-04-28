@@ -152,7 +152,7 @@ namespace Cfd
     public Address Address { get; }
     public Script RedeemScript { get; }
     public CfdKeyData KeyData { get; }
-    public Vector<CfdKeyData> MultisigKeyList { get; }
+    public ArraySegment<CfdKeyData> MultisigKeyList { get; }
     public uint MultisigRequireNum { get; }
 
     public CfdDescriptorScriptData(CfdDescriptorScriptType scriptType, uint depth,
@@ -164,7 +164,7 @@ namespace Cfd
       this.Address = new Address();
       this.RedeemScript = redeemScript;
       this.KeyData = new CfdKeyData();
-      this.MultisigKeyList = new Vector<CfdKeyData>();
+      this.MultisigKeyList = new ArraySegment<CfdKeyData>();
       this.MultisigRequireNum = 0;
     }
 
@@ -177,7 +177,7 @@ namespace Cfd
       this.Address = address;
       this.RedeemScript = new Script();
       this.KeyData = new CfdKeyData();
-      this.MultisigKeyList = new Vector<CfdKeyData>();
+      this.MultisigKeyList = new ArraySegment<CfdKeyData>();
       this.MultisigRequireNum = 0;
     }
 
@@ -190,7 +190,7 @@ namespace Cfd
       this.Address = address;
       this.RedeemScript = new Script();
       this.KeyData = keyData;
-      this.MultisigKeyList = new Vector<CfdKeyData>();
+      this.MultisigKeyList = new ArraySegment<CfdKeyData>();
       this.MultisigRequireNum = 0;
     }
 
@@ -203,7 +203,7 @@ namespace Cfd
       this.Address = address;
       this.RedeemScript = redeemScript;
       this.KeyData = new CfdKeyData();
-      this.MultisigKeyList = new Vector<CfdKeyData>();
+      this.MultisigKeyList = new ArraySegment<CfdKeyData>();
       this.MultisigRequireNum = 0;
     }
 
@@ -217,7 +217,7 @@ namespace Cfd
       this.Address = address;
       this.RedeemScript = redeemScript;
       this.KeyData = new CfdKeyData();
-      this.MultisigKeyList = new Vector<CfdKeyData>(multisigKeyList);
+      this.MultisigKeyList = new ArraySegment<CfdKeyData>(multisigKeyList);
       this.MultisigRequireNum = multisigRequireNum;
     }
 
@@ -231,7 +231,7 @@ namespace Cfd
       this.Address = address;
       this.RedeemScript = redeemScript;
       this.KeyData = keyData;
-      this.MultisigKeyList = new Vector<CfdKeyData>(multisigKeyList);
+      this.MultisigKeyList = new ArraySegment<CfdKeyData>(multisigKeyList);
       this.MultisigRequireNum = multisigRequireNum;
     }
 
@@ -310,7 +310,8 @@ namespace Cfd
   public class Descriptor
   {
     private readonly string descriptor;
-    private Vector<CfdDescriptorScriptData> scriptList;
+    private readonly CfdDescriptorScriptData[] scriptList;
+    private readonly CfdDescriptorScriptData rootData;
 
     public Descriptor(string descriptorString, CfdNetworkType network)
     {
@@ -322,6 +323,7 @@ namespace Cfd
       {
         descriptor = GetDescriptorChecksum(handle, descriptorString, network);
         scriptList = ParseDescriptor(handle, descriptorString, "", network);
+        rootData = AnalyzeScriptList(scriptList);
       }
     }
 
@@ -339,6 +341,7 @@ namespace Cfd
       {
         descriptor = GetDescriptorChecksum(handle, descriptorString, network);
         scriptList = ParseDescriptor(handle, descriptorString, derivePath, network);
+        rootData = AnalyzeScriptList(scriptList);
       }
     }
 
@@ -354,7 +357,7 @@ namespace Cfd
       return CCommon.ConvertToString(descriptorAddedChecksum);
     }
 
-    private static Vector<CfdDescriptorScriptData> ParseDescriptor(
+    private static CfdDescriptorScriptData[] ParseDescriptor(
         ErrorHandle handle, string descriptorString,
         string derivePath, CfdNetworkType network)
     {
@@ -476,7 +479,7 @@ namespace Cfd
           }
           list[index] = data;
         }
-        return new Vector<CfdDescriptorScriptData>(list);
+        return list;
       }
       finally
       {
@@ -485,14 +488,173 @@ namespace Cfd
       }
     }
 
+    private static CfdDescriptorScriptData AnalyzeScriptList(CfdDescriptorScriptData[] scriptList)
+    {
+      if ((scriptList[0].HashType == CfdHashType.P2wsh) ||
+        (scriptList[0].HashType == CfdHashType.P2sh))
+      {
+        if ((scriptList.Length > 1) && (scriptList[1].HashType == CfdHashType.P2pkh))
+        {
+          CfdDescriptorScriptData data = new CfdDescriptorScriptData(
+            scriptList[0].ScriptType,
+            scriptList[0].Depth,
+            scriptList[0].HashType,
+            scriptList[0].Address,
+            scriptList[0].RedeemScript,
+            scriptList[1].KeyData, Array.Empty<CfdKeyData>(), 0);
+          return data;
+        }
+      }
+      if (scriptList[0].HashType == CfdHashType.P2shP2wsh)
+      {
+        if ((scriptList.Length > 2) && (scriptList[2].HashType == CfdHashType.P2pkh))
+        {
+          CfdDescriptorScriptData data = new CfdDescriptorScriptData(
+            scriptList[0].ScriptType, scriptList[0].Depth,
+            scriptList[0].HashType, scriptList[0].Address,
+            scriptList[1].RedeemScript,
+            scriptList[2].KeyData, Array.Empty<CfdKeyData>(), 0);
+          return data;
+        }
+      }
+      if ((scriptList[0].ScriptType != CfdDescriptorScriptType.Sh) ||
+        (scriptList.Length == 1))
+      {
+        return scriptList[0];
+      }
+
+      if (scriptList[0].HashType == CfdHashType.P2shP2wsh)
+      {
+        if (scriptList[1].MultisigRequireNum > 0)
+        {
+          CfdDescriptorScriptData data = new CfdDescriptorScriptData(
+            scriptList[0].ScriptType,
+            scriptList[0].Depth,
+            scriptList[0].HashType,
+            scriptList[0].Address,
+            scriptList[1].RedeemScript,
+            scriptList[1].MultisigKeyList.ToArray(),
+            scriptList[1].MultisigRequireNum);
+          return data;
+        }
+        else
+        {
+          CfdDescriptorScriptData data = new CfdDescriptorScriptData(
+            scriptList[0].ScriptType,
+            scriptList[0].Depth,
+            scriptList[0].HashType,
+            scriptList[0].Address,
+            scriptList[1].RedeemScript);
+          return data;
+        }
+      }
+      else if (scriptList[0].HashType == CfdHashType.P2shP2wpkh)
+      {
+        CfdDescriptorScriptData data = new CfdDescriptorScriptData(
+          scriptList[0].ScriptType,
+          scriptList[0].Depth,
+          scriptList[0].HashType,
+          scriptList[0].Address,
+          scriptList[1].KeyData);
+        return data;
+      }
+      return scriptList[0];
+    }
+
+
     public override string ToString()
     {
       return descriptor;
     }
 
-    public Vector<CfdDescriptorScriptData> GetList()
+    public CfdDescriptorScriptData[] GetList()
     {
-      return scriptList;
+      CfdDescriptorScriptData[] newList = new CfdDescriptorScriptData[scriptList.Length];
+      scriptList.CopyTo(newList, 0);
+      return newList;
+    }
+
+    public CfdHashType GetHashType()
+    {
+      return rootData.HashType;
+    }
+
+    public Address GetAddress()
+    {
+      return rootData.Address;
+    }
+
+    public CfdAddressType GetAddressType()
+    {
+      return (CfdAddressType)rootData.HashType;
+    }
+
+    public bool HasScriptHash()
+    {
+      switch (rootData.HashType)
+      {
+        case CfdHashType.P2sh:
+        case CfdHashType.P2wsh:
+        case CfdHashType.P2shP2wsh:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    public Script GetRedeemScript()
+    {
+      switch (rootData.HashType)
+      {
+        case CfdHashType.P2sh:
+        case CfdHashType.P2wsh:
+        case CfdHashType.P2shP2wsh:
+          return rootData.RedeemScript;
+        default:
+          CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
+            "Failed to unused script descriptor.");
+          return null;
+      }
+    }
+
+    public bool HasKeyHash()
+    {
+      switch (rootData.HashType)
+      {
+        case CfdHashType.P2pkh:
+        case CfdHashType.P2wpkh:
+        case CfdHashType.P2shP2wpkh:
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    public CfdKeyData GetKeyData()
+    {
+      if ((!HasKeyHash()) || (rootData.MultisigRequireNum == 0))
+      {
+        CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
+          "Failed to script hash or multisig key.");
+      }
+      return rootData.KeyData;
+    }
+
+    public bool HasMultisig()
+    {
+      return (rootData.MultisigRequireNum != 0);
+    }
+
+    public CfdKeyData[] GetMultisigKeyList()
+    {
+      if ((!HasKeyHash()) || (rootData.MultisigRequireNum != 0))
+      {
+        CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
+          "Failed to script hash or multisig key.");
+      }
+      CfdKeyData[] keyList = new CfdKeyData[rootData.MultisigKeyList.Count];
+      rootData.MultisigKeyList.CopyTo(keyList);
+      return keyList;
     }
   }
 }

@@ -41,5 +41,13 @@ namespace Cfd.xTests
       Assert.False((p1 == p4));
       Assert.True((p4 == p5));
     }
+
+    [Fact]
+    public void EncodeToDerTest()
+    {
+      ByteData sig = new ByteData("773420c0ded41a55b1f1205cfb632f08f3f911a53e7338a0dac73ec6cbe3ca471907434d046185abedc5afddc2761a642bccc70af6d22b46394f1d04a8b24226");
+      ByteData derencData = SignParameter.EncodeToDer(sig, new SignatureHashType(CfdSighashType.All, false));
+      Assert.Equal("30440220773420c0ded41a55b1f1205cfb632f08f3f911a53e7338a0dac73ec6cbe3ca4702201907434d046185abedc5afddc2761a642bccc70af6d22b46394f1d04a8b2422601", derencData.ToHexString());
+    }
   }
 }

@@ -241,7 +241,7 @@ namespace Cfd.xTests
       Txid txid = new Txid("57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f");
       uint vout = 0;
       Pubkey pubkey = new Pubkey("03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6");
-      Privkey privkey = new Privkey("cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1", true);
+      Privkey privkey = new Privkey("cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1");
       CfdHashType hashType = CfdHashType.P2wpkh;
       SignatureHashType sighashType = new SignatureHashType(CfdSighashType.All, false);
 
@@ -271,7 +271,7 @@ namespace Cfd.xTests
       Txid txid = new Txid("57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f");
       uint vout = 0;
       Pubkey pubkey = new Pubkey("03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6");
-      Privkey privkey = new Privkey("cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1", true);
+      Privkey privkey = new Privkey("cU4KjNUT7GjHm7CkjRjG46SzLrXHXoH3ekXmqa2jTCFPMkQ64sw1");
       CfdHashType hashType = CfdHashType.P2wpkh;
       SignatureHashType sighashType = new SignatureHashType(CfdSighashType.All, false);
       tx.AddSignWithPrivkeySimple(txid, vout, hashType, privkey, value, sighashType);
@@ -290,9 +290,9 @@ namespace Cfd.xTests
       ConfidentialTransaction tx = new ConfidentialTransaction(txHex);
 
       Pubkey pubkey1 = new Pubkey("02715ed9a5f16153c5216a6751b7d84eba32076f0b607550a58b209077ab7c30ad");
-      Privkey privkey1 = new Privkey("cRVLMWHogUo51WECRykTbeLNbm5c57iEpSegjdxco3oef6o5dbFi", true);
+      Privkey privkey1 = new Privkey("cRVLMWHogUo51WECRykTbeLNbm5c57iEpSegjdxco3oef6o5dbFi");
       Pubkey pubkey2 = new Pubkey("02bfd7daa5d113fcbd8c2f374ae58cbb89cbed9570e898f1af5ff989457e2d4d71");
-      Privkey privkey2 = new Privkey("cQUTZ8VbWNYBEtrB7xwe41kqiKMQPRZshTvBHmkoJGaUfmS5pxzR", true);
+      Privkey privkey2 = new Privkey("cQUTZ8VbWNYBEtrB7xwe41kqiKMQPRZshTvBHmkoJGaUfmS5pxzR");
       Pubkey[] pubkeyList = { pubkey2, pubkey1 };
 
       long satoshiValue = 13000000000000;
@@ -300,7 +300,7 @@ namespace Cfd.xTests
       Txid txid = new Txid("57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f");
       uint vout = 0;
 
-      Script redeemScript = ScriptUtil.CreateMultisig(pubkeyList, 2);
+      Script redeemScript = Script.CreateMultisigScript(2, pubkeyList);
 
       CfdHashType hashType = CfdHashType.P2wsh;
       SignatureHashType sighashType = new SignatureHashType(CfdSighashType.All, false);

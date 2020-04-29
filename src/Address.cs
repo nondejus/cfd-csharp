@@ -204,9 +204,9 @@ namespace Cfd
       return address;
     }
 
-    public string GetLockingScript()
+    public Script GetLockingScript()
     {
-      return lockingScript;
+      return new Script(lockingScript);
     }
 
     public string GetHash()

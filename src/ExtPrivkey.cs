@@ -89,10 +89,11 @@ namespace Cfd
         string childExtkey = extkey;
         foreach (uint childNum in path)
         {
+          IntPtr tempExtkey = new IntPtr(0);
           var ret = NativeMethods.CfdCreateExtkeyFromParent(
             handle.GetHandle(), childExtkey, childNum, false,
             (int)networkType, (int)CfdExtKeyType.Privkey,
-            out IntPtr tempExtkey);
+            out tempExtkey);
           if (ret != CfdErrorCode.Success)
           {
             handle.ThrowError(ret);
@@ -159,6 +160,11 @@ namespace Cfd
         throw new ArgumentNullException(nameof(path));
       }
       return DerivePrivkey(path).GetExtPubkey();
+    }
+
+    public override string ToString()
+    {
+      return extkey;
     }
 
     public Privkey GetPrivkey()

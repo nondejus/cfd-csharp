@@ -28,9 +28,9 @@ namespace Cfd
   public static class CfdCommon
   {
     /// <summary>
-    /// Get string from cfd's pointer address, and free address buffer.
+    /// Get reversed buffer.
     /// </summary>
-    /// <param name="address">pointer address</param>
+    /// <param name="bytes">byte data</param>
     /// <returns>string</returns>
     public static byte[] ReverseBytes(byte[] bytes)
     {

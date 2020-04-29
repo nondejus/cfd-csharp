@@ -47,8 +47,8 @@ namespace Cfd
       }
     }
 
-    public ExtPubkey(Pubkey parentPubkey, Pubkey pubkey, ByteData chainCode,
-      uint depth, uint childNumber)
+    public ExtPubkey(CfdNetworkType networkType, Pubkey parentPubkey,
+      Pubkey pubkey, ByteData chainCode, uint depth, uint childNumber)
     {
       if (parentPubkey is null)
       {
@@ -65,25 +65,26 @@ namespace Cfd
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdCreateExtkey(
-          handle.GetHandle(), (int)CfdExtKeyType.Pubkey, parentPubkey.ToHexString(), "",
-          pubkey.ToHexString(), chainCode.ToHexString(), (byte)depth, childNumber,
-          out IntPtr tempExtkey);
+          handle.GetHandle(), (int)networkType, (int)CfdExtKeyType.Pubkey,
+          parentPubkey.ToHexString(), "", pubkey.ToHexString(),
+          chainCode.ToHexString(), (byte)depth, childNumber, out IntPtr tempExtkey);
         if (ret != CfdErrorCode.Success)
         {
           handle.ThrowError(ret);
         }
         extkey = CCommon.ConvertToString(tempExtkey);
+        this.networkType = networkType;
         this.pubkey = pubkey;
         this.chainCode = chainCode;
         this.depth = depth;
         this.childNumber = childNumber;
         GetExtkeyInformation(handle, extkey, out version, out fingerprint,
-          out _, out _, out _, out networkType);
+          out _, out _, out _, out _);
       }
     }
 
-    public ExtPubkey(ByteData fingerprint, Pubkey pubkey, ByteData chainCode,
-      uint depth, uint childNumber)
+    public ExtPubkey(CfdNetworkType networkType, ByteData fingerprint,
+      Pubkey pubkey, ByteData chainCode, uint depth, uint childNumber)
     {
       if (fingerprint is null)
       {
@@ -100,21 +101,22 @@ namespace Cfd
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdCreateExtkey(
-          handle.GetHandle(), (int)CfdExtKeyType.Pubkey, "", fingerprint.ToHexString(),
-          pubkey.ToHexString(), chainCode.ToHexString(), (byte)depth, childNumber,
-          out IntPtr tempExtkey);
+          handle.GetHandle(), (int)networkType, (int)CfdExtKeyType.Pubkey, "",
+          fingerprint.ToHexString(), pubkey.ToHexString(), chainCode.ToHexString(),
+          (byte)depth, childNumber, out IntPtr tempExtkey);
         if (ret != CfdErrorCode.Success)
         {
           handle.ThrowError(ret);
         }
         extkey = CCommon.ConvertToString(tempExtkey);
+        this.networkType = networkType;
         this.fingerprint = fingerprint;
         this.pubkey = pubkey;
         this.chainCode = chainCode;
         this.depth = depth;
         this.childNumber = childNumber;
         GetExtkeyInformation(handle, extkey, out version, out _,
-          out _, out _, out _, out networkType);
+          out _, out _, out _, out _);
       }
     }
 
@@ -146,10 +148,11 @@ namespace Cfd
         string childExtkey = extkey;
         foreach (uint childNum in path)
         {
+          IntPtr tempExtkey = new IntPtr(0);
           var ret = NativeMethods.CfdCreateExtkeyFromParent(
             handle.GetHandle(), childExtkey, childNum, false,
             (int)networkType, (int)CfdExtKeyType.Pubkey,
-            out IntPtr tempExtkey);
+            out tempExtkey);
           if (ret != CfdErrorCode.Success)
           {
             handle.ThrowError(ret);
@@ -168,8 +171,9 @@ namespace Cfd
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = NativeMethods.CfdCreateExtPubkey(
-          handle.GetHandle(), extkey, (int)networkType, out IntPtr tempExtkey);
+        var ret = NativeMethods.CfdCreateExtkeyFromParentPath(
+          handle.GetHandle(), extkey, path, (int)networkType,
+          (int)CfdExtKeyType.Pubkey, out IntPtr tempExtkey);
         if (ret != CfdErrorCode.Success)
         {
           handle.ThrowError(ret);
@@ -177,6 +181,11 @@ namespace Cfd
         string childExtkey = CCommon.ConvertToString(tempExtkey);
         return new ExtPubkey(childExtkey);
       }
+    }
+
+    public override string ToString()
+    {
+      return extkey;
     }
 
     public Pubkey GetPubkey()

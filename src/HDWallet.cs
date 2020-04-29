@@ -30,8 +30,9 @@ namespace Cfd
           string[] mnemonicList = new string[maxIndex];
           for (uint index = 0; index < maxIndex; ++index)
           {
+            IntPtr word = new IntPtr(0);
             ret = NativeMethods.CfdGetMnemonicWord(
-              handle.GetHandle(), mnemonicHandle, index, out IntPtr word);
+              handle.GetHandle(), mnemonicHandle, index, out word);
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);

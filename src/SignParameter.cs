@@ -115,10 +115,24 @@ namespace Cfd
       isSetDerEncode = false;
     }
 
+    public ByteData ToDerEncode()
+    {
+      if (!isSetDerEncode)
+      {
+        CfdCommon.ThrowError(CfdErrorCode.IllegalStateError, "Failed to unset der encode flag.");
+      }
+      return EncodeToDer(new ByteData(data), signatureHashType);
+    }
+
     public void SetDerEncode(SignatureHashType signatureHashType)
     {
-      this.signatureHashType = signatureHashType;
+      SetSignatureHashType(signatureHashType);
       isSetDerEncode = true;
+    }
+
+    public void SetSignatureHashType(SignatureHashType signatureHashType)
+    {
+      this.signatureHashType = signatureHashType;
     }
 
     public void SetRelatedPubkey(Pubkey relatedPubkey)

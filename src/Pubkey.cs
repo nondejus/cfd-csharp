@@ -85,7 +85,7 @@ namespace Cfd
       }
       pubkey = StringUtil.FromBytes(bytes);
       // check format
-      Negate();
+      Validate(pubkey);
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ namespace Cfd
       }
       pubkey = pubkeyHex;
       // check format
-      Negate();
+      Validate(pubkey);
     }
 
     public bool IsCompressed()
@@ -230,6 +230,21 @@ namespace Cfd
         return true;
       }
       return false;
+    }
+
+    private static void Validate(string pubkeyHex)
+    {
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdCompressPubkey(
+            handle.GetHandle(), pubkeyHex,
+            out IntPtr compressedPubkey);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        CCommon.ConvertToString(compressedPubkey);
+      }
     }
   }
 }

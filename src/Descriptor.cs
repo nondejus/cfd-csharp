@@ -373,19 +373,26 @@ namespace Cfd
         bool isMultisig = false;
         uint maxKeyNum = 0;
         uint requireNum = 0;
-        CfdDescriptorScriptData[] list = new CfdDescriptorScriptData[maxIndex];
-        for (uint index = 0; index < maxIndex; ++index)
+        CfdDescriptorScriptData[] list = new CfdDescriptorScriptData[maxIndex + 1];
+        for (uint index = 0; index <= maxIndex; ++index)
         {
+          IntPtr lockingScript = new IntPtr(0);
+          IntPtr redeemScript = new IntPtr(0);
+          IntPtr address = new IntPtr(0);
+          IntPtr pubkey = new IntPtr(0);
+          IntPtr extPubkey = new IntPtr(0);
+          IntPtr extPrivkey = new IntPtr(0);
           ret = NativeMethods.CfdGetDescriptorData(
             handle.GetHandle(), descriptorHandle, index, out _, out uint depth,
-            out int scriptType, out IntPtr lockingScript, out IntPtr address,
-            out int hashType, out IntPtr redeemScript,
-            out int keyType, out IntPtr pubkey, out IntPtr extPubkey, out IntPtr extPrivkey,
+            out int scriptType, out lockingScript, out address,
+            out int hashType, out redeemScript,
+            out int keyType, out pubkey, out extPubkey, out extPrivkey,
             out isMultisig, out maxKeyNum, out requireNum);
           if (ret != CfdErrorCode.Success)
           {
             handle.ThrowError(ret);
           }
+          CCommon.ConvertToString(lockingScript);
           string tempAddress = CCommon.ConvertToString(address);
           string tempRedeemScript = CCommon.ConvertToString(redeemScript);
           string tempPubkey = CCommon.ConvertToString(pubkey);
@@ -426,9 +433,12 @@ namespace Cfd
                 CfdKeyData[] keyList = new CfdKeyData[maxKeyNum];
                 for (uint multisigIndex = 0; multisigIndex < maxKeyNum; ++multisigIndex)
                 {
+                  IntPtr multisigPubkey = new IntPtr(0);
+                  IntPtr multisigExtPubkey = new IntPtr(0);
+                  IntPtr multisigExtPrivkey = new IntPtr(0);
                   ret = NativeMethods.CfdGetDescriptorMultisigKey(handle.GetHandle(), descriptorHandle,
-                    multisigIndex, out int multisigKeyType, out IntPtr multisigPubkey,
-                    out IntPtr multisigExtPubkey, out IntPtr multisigExtPrivkey);
+                    multisigIndex, out int multisigKeyType, out multisigPubkey,
+                    out multisigExtPubkey, out multisigExtPrivkey);
                   if (ret != CfdErrorCode.Success)
                   {
                     handle.ThrowError(ret);
@@ -632,7 +642,7 @@ namespace Cfd
 
     public CfdKeyData GetKeyData()
     {
-      if ((!HasKeyHash()) || (rootData.MultisigRequireNum == 0))
+      if ((!HasKeyHash()) || (rootData.MultisigRequireNum != 0))
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
           "Failed to script hash or multisig key.");
@@ -647,7 +657,7 @@ namespace Cfd
 
     public CfdKeyData[] GetMultisigKeyList()
     {
-      if ((!HasKeyHash()) || (rootData.MultisigRequireNum != 0))
+      if ((!HasKeyHash()) || (rootData.MultisigRequireNum == 0))
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
           "Failed to script hash or multisig key.");

@@ -1,5 +1,6 @@
 using System;
 using System.Net.NetworkInformation;
+using System.Text;
 
 /// <summary>
 /// cfd library namespace.
@@ -12,7 +13,47 @@ namespace Cfd
     private readonly string script;
     private readonly string[] scriptItems;
 
-    public static Script CreateMulisigScript(uint requireNum, Pubkey[] pubkeys)
+    public static Script CreateFromAsm(string asm)
+    {
+      if (asm is null)
+      {
+        throw new ArgumentNullException(nameof(asm));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdConvertScriptAsmToHex(handle.GetHandle(), asm, out IntPtr hexString);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        return new Script(CCommon.ConvertToString(hexString));
+      }
+    }
+
+    public static Script CreateFromAsm(string[] asmList)
+    {
+      if (asmList is null)
+      {
+        throw new ArgumentNullException(nameof(asmList));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        StringBuilder builder = new StringBuilder();
+        foreach (string asm in asmList)
+        {
+          IntPtr hexString = new IntPtr(0);
+          var ret = NativeMethods.CfdConvertScriptAsmToHex(handle.GetHandle(), asm, out hexString);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          builder.Append(CCommon.ConvertToString(hexString));
+        }
+        return new Script(builder.ToString());
+      }
+    }
+
+    public static Script CreateMultisigScript(uint requireNum, Pubkey[] pubkeys)
     {
       if (pubkeys is null)
       {
@@ -46,9 +87,11 @@ namespace Cfd
           Address[] addrList = new Address[maxKeyNum];
           for (uint index = 0; index < maxKeyNum; ++index)
           {
+            IntPtr address = new IntPtr(0);
+            IntPtr pubkey = new IntPtr(0);
             ret = NativeMethods.CfdGetAddressFromMultisigKey(
               handle.GetHandle(), multisigHandle, index,
-              out IntPtr address, out IntPtr pubkey);
+              out address, out pubkey);
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);
@@ -161,9 +204,10 @@ namespace Cfd
         var items = new string[scriptItemNum];
         for (uint index = 0; index < scriptItemNum; ++index)
         {
+          IntPtr scriptItem = new IntPtr(0);
           ret = NativeMethods.CfdGetScriptItem(
             handle.GetHandle(), scriptItemHandle, index,
-            out IntPtr scriptItem);
+            out scriptItem);
           if (ret != CfdErrorCode.Success)
           {
             handle.ThrowError(ret);

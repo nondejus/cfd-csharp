@@ -41,7 +41,7 @@ namespace Cfd
     /// <summary>
     /// Constructor. (valid blind factor)
     /// </summary>
-    /// <param name="blindFactorHex">blinder</param>
+    /// <param name="bytes">blinder</param>
     public BlindFactor(byte[] bytes)
     {
       if (bytes is null)

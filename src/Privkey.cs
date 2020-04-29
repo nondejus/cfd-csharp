@@ -62,7 +62,7 @@ namespace Cfd
     /// <summary>
     /// Constructor.
     /// </summary>
-    /// <param name="privkeyHex">privkey(wif or hex)</param>
+    /// <param name="privkey">privkey(wif or hex)</param>
     public Privkey(string privkey)
     {
       if (privkey is null)
@@ -265,7 +265,6 @@ namespace Cfd
     /// Calculate ec-signature.
     /// </summary>
     /// <param name="sighash">signature hash.</param>
-    /// <param name="hasGrindR">use grind-R.</param>
     /// <returns></returns>
     public SignParameter CalculateEcSignature(ByteData sighash)
     {

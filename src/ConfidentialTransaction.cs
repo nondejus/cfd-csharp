@@ -264,11 +264,6 @@ namespace Cfd
     public ByteData IssuanceAmountRangeproof { get; }
     public ByteData InflationKeysRangeproof { get; }
 
-    /// <summary>
-    /// Constructor. (use issueasset)
-    /// </summary>
-    /// <param name="assetKey">asset blinding key</param>
-    /// <param name="tokenKey">token blinding key</param>
     public IssuanceData(byte[] blindingNonce, byte[] assetEntropy,
         ConfidentialValue issuanceAmount, ConfidentialValue tokenAmount,
         byte[] issuanceRangeproof, byte[] tokenRangeproof)
@@ -1991,9 +1986,10 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < witnessCount; ++witnessIndex)
       {
+        IntPtr stackData = new IntPtr(0);
         ret = NativeMethods.CfdGetConfidentialTxInWitness(
             handle.GetHandle(), tx, index, witnessIndex,
-            out IntPtr stackData);
+            out stackData);
         if (ret != CfdErrorCode.Success)
         {
           handle.ThrowError(ret);
@@ -2001,16 +1997,22 @@ namespace Cfd
         witnessArray[witnessIndex] = CCommon.ConvertToString(stackData);
       }
 
+      IntPtr outEntropy = new IntPtr(0);
+      IntPtr outNonce = new IntPtr(0);
+      IntPtr outAssetValue = new IntPtr(0);
+      IntPtr outTokenValue = new IntPtr(0);
+      IntPtr outAssetRangeproof = new IntPtr(0);
+      IntPtr outTokenRangeproof = new IntPtr(0);
       ret = NativeMethods.CfdGetTxInIssuanceInfo(
           handle.GetHandle(), tx, index,
-          out IntPtr outEntropy,
-          out IntPtr outNonce,
+          out outEntropy,
+          out outNonce,
           out long assetAmount,
-          out IntPtr outAssetValue,
+          out outAssetValue,
           out long tokenAmount,
-          out IntPtr outTokenValue,
-          out IntPtr outAssetRangeproof,
-          out IntPtr outTokenRangeproof);
+          out outTokenValue,
+          out outAssetRangeproof,
+          out outTokenRangeproof);
       if (ret != CfdErrorCode.Success)
       {
         handle.ThrowError(ret);
@@ -2038,9 +2040,10 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < peginCount; ++witnessIndex)
       {
+        IntPtr stackData = new IntPtr(0);
         ret = NativeMethods.CfdGetConfidentialTxInPeginWitness(
             handle.GetHandle(), tx, index, witnessIndex,
-            out IntPtr stackData);
+            out stackData);
         if (ret != CfdErrorCode.Success)
         {
           handle.ThrowError(ret);

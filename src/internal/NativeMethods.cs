@@ -789,6 +789,7 @@ namespace Cfd
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdCreateExtkey(
           [In] IntPtr handle,
+          [In] int networkType,
           [In] int keyType,
           [In] string parentKey,
           [In] string fingerprint,

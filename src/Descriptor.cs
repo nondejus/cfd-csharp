@@ -376,12 +376,13 @@ namespace Cfd
         CfdDescriptorScriptData[] list = new CfdDescriptorScriptData[maxIndex + 1];
         for (uint index = 0; index <= maxIndex; ++index)
         {
-          IntPtr lockingScript = new IntPtr(0);
-          IntPtr redeemScript = new IntPtr(0);
-          IntPtr address = new IntPtr(0);
-          IntPtr pubkey = new IntPtr(0);
-          IntPtr extPubkey = new IntPtr(0);
-          IntPtr extPrivkey = new IntPtr(0);
+          // force initialized because guard illegal memory access.
+          IntPtr lockingScript = IntPtr.Zero;
+          IntPtr redeemScript = IntPtr.Zero;
+          IntPtr address = IntPtr.Zero;
+          IntPtr pubkey = IntPtr.Zero;
+          IntPtr extPubkey = IntPtr.Zero;
+          IntPtr extPrivkey = IntPtr.Zero;
           ret = NativeMethods.CfdGetDescriptorData(
             handle.GetHandle(), descriptorHandle, index, out _, out uint depth,
             out int scriptType, out lockingScript, out address,
@@ -433,9 +434,9 @@ namespace Cfd
                 CfdKeyData[] keyList = new CfdKeyData[maxKeyNum];
                 for (uint multisigIndex = 0; multisigIndex < maxKeyNum; ++multisigIndex)
                 {
-                  IntPtr multisigPubkey = new IntPtr(0);
-                  IntPtr multisigExtPubkey = new IntPtr(0);
-                  IntPtr multisigExtPrivkey = new IntPtr(0);
+                  IntPtr multisigPubkey = IntPtr.Zero;
+                  IntPtr multisigExtPubkey = IntPtr.Zero;
+                  IntPtr multisigExtPrivkey = IntPtr.Zero;
                   ret = NativeMethods.CfdGetDescriptorMultisigKey(handle.GetHandle(), descriptorHandle,
                     multisigIndex, out int multisigKeyType, out multisigPubkey,
                     out multisigExtPubkey, out multisigExtPrivkey);
@@ -488,6 +489,14 @@ namespace Cfd
               break;
           }
           list[index] = data;
+
+          if (scriptType == (int)CfdDescriptorScriptType.Combo)
+          {
+            // TODO: combo data is top only.
+            CfdDescriptorScriptData[] newList = { list[0] };
+            list = newList;
+            break;
+          }
         }
         return list;
       }
@@ -601,6 +610,14 @@ namespace Cfd
 
     public bool HasScriptHash()
     {
+      switch (scriptList[0].ScriptType)
+      {
+        case CfdDescriptorScriptType.Sh:
+        case CfdDescriptorScriptType.Wsh:
+          break;
+        default:
+          return false;
+      }
       switch (rootData.HashType)
       {
         case CfdHashType.P2sh:
@@ -629,6 +646,16 @@ namespace Cfd
 
     public bool HasKeyHash()
     {
+      switch (scriptList[0].ScriptType)
+      {
+        case CfdDescriptorScriptType.Sh:
+        case CfdDescriptorScriptType.Pkh:
+        case CfdDescriptorScriptType.Wpkh:
+        case CfdDescriptorScriptType.Combo:
+          break;
+        default:
+          return false;
+      }
       switch (rootData.HashType)
       {
         case CfdHashType.P2pkh:
@@ -642,7 +669,7 @@ namespace Cfd
 
     public CfdKeyData GetKeyData()
     {
-      if ((!HasKeyHash()) || (rootData.MultisigRequireNum != 0))
+      if (rootData.KeyData.KeyType == CfdDescriptorKeyType.Null)
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
           "Failed to script hash or multisig key.");
@@ -657,7 +684,7 @@ namespace Cfd
 
     public CfdKeyData[] GetMultisigKeyList()
     {
-      if ((!HasKeyHash()) || (rootData.MultisigRequireNum == 0))
+      if ((HasKeyHash()) || (rootData.MultisigRequireNum == 0))
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalStateError,
           "Failed to script hash or multisig key.");

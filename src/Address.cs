@@ -115,6 +115,7 @@ namespace Cfd
 
     public Address()
     {
+      address = "";
     }
 
     public Address(string addressString)
@@ -259,6 +260,11 @@ namespace Cfd
       outputWitnessVersion = (CfdWitnessVersion)segwitVersion;
       outputLockingScript = CCommon.ConvertToString(lockingScript);
       outputHash = CCommon.ConvertToString(hashString);
+    }
+
+    public bool IsValid()
+    {
+      return address.Length != 0;
     }
   }
 }

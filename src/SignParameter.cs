@@ -1,8 +1,5 @@
 using System;
 
-/// <summary>
-/// cfd library namespace.
-/// </summary>
 namespace Cfd
 {
   /// <summary>
@@ -121,7 +118,12 @@ namespace Cfd
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalStateError, "Failed to unset der encode flag.");
       }
-      return EncodeToDer(new ByteData(data), signatureHashType);
+      return ToDerEncode(signatureHashType);
+    }
+
+    public ByteData ToDerEncode(SignatureHashType sighashType)
+    {
+      return EncodeToDer(new ByteData(data), sighashType);
     }
 
     public void SetDerEncode(SignatureHashType signatureHashType)

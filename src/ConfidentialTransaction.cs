@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// cfd library namespace.
-/// </summary>
 namespace Cfd
 {
   /// <summary>
@@ -1986,7 +1983,9 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < witnessCount; ++witnessIndex)
       {
-        IntPtr stackData = new IntPtr(0);
+#pragma warning disable IDE0059 // 値の不必要な代入
+        IntPtr stackData = IntPtr.Zero;
+#pragma warning restore IDE0059 // 値の不必要な代入
         ret = NativeMethods.CfdGetConfidentialTxInWitness(
             handle.GetHandle(), tx, index, witnessIndex,
             out stackData);
@@ -1997,22 +1996,16 @@ namespace Cfd
         witnessArray[witnessIndex] = CCommon.ConvertToString(stackData);
       }
 
-      IntPtr outEntropy = new IntPtr(0);
-      IntPtr outNonce = new IntPtr(0);
-      IntPtr outAssetValue = new IntPtr(0);
-      IntPtr outTokenValue = new IntPtr(0);
-      IntPtr outAssetRangeproof = new IntPtr(0);
-      IntPtr outTokenRangeproof = new IntPtr(0);
       ret = NativeMethods.CfdGetTxInIssuanceInfo(
           handle.GetHandle(), tx, index,
-          out outEntropy,
-          out outNonce,
+          out IntPtr outEntropy,
+          out IntPtr outNonce,
           out long assetAmount,
-          out outAssetValue,
+          out IntPtr outAssetValue,
           out long tokenAmount,
-          out outTokenValue,
-          out outAssetRangeproof,
-          out outTokenRangeproof);
+          out IntPtr outTokenValue,
+          out IntPtr outAssetRangeproof,
+          out IntPtr outTokenRangeproof);
       if (ret != CfdErrorCode.Success)
       {
         handle.ThrowError(ret);
@@ -2040,7 +2033,9 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < peginCount; ++witnessIndex)
       {
-        IntPtr stackData = new IntPtr(0);
+#pragma warning disable IDE0059 // 値の不必要な代入
+        IntPtr stackData = IntPtr.Zero;
+#pragma warning restore IDE0059 // 値の不必要な代入
         ret = NativeMethods.CfdGetConfidentialTxInPeginWitness(
             handle.GetHandle(), tx, index, witnessIndex,
             out stackData);

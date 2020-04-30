@@ -41,7 +41,9 @@ namespace Cfd
         StringBuilder builder = new StringBuilder();
         foreach (string asm in asmList)
         {
-          IntPtr hexString = new IntPtr(0);
+#pragma warning disable IDE0059 // 値の不必要な代入
+          IntPtr hexString = IntPtr.Zero;
+#pragma warning restore IDE0059 // 値の不必要な代入
           var ret = NativeMethods.CfdConvertScriptAsmToHex(handle.GetHandle(), asm, out hexString);
           if (ret != CfdErrorCode.Success)
           {
@@ -87,8 +89,8 @@ namespace Cfd
           Address[] addrList = new Address[maxKeyNum];
           for (uint index = 0; index < maxKeyNum; ++index)
           {
-            IntPtr address = new IntPtr(0);
-            IntPtr pubkey = new IntPtr(0);
+            IntPtr address = IntPtr.Zero;
+            IntPtr pubkey = IntPtr.Zero;
             ret = NativeMethods.CfdGetAddressFromMultisigKey(
               handle.GetHandle(), multisigHandle, index,
               out address, out pubkey);
@@ -204,7 +206,7 @@ namespace Cfd
         var items = new string[scriptItemNum];
         for (uint index = 0; index < scriptItemNum; ++index)
         {
-          IntPtr scriptItem = new IntPtr(0);
+          IntPtr scriptItem = IntPtr.Zero;
           ret = NativeMethods.CfdGetScriptItem(
             handle.GetHandle(), scriptItemHandle, index,
             out scriptItem);

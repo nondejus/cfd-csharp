@@ -89,7 +89,7 @@ namespace Cfd
         string childExtkey = extkey;
         foreach (uint childNum in path)
         {
-          IntPtr tempExtkey = new IntPtr(0);
+          IntPtr tempExtkey = IntPtr.Zero;
           var ret = NativeMethods.CfdCreateExtkeyFromParent(
             handle.GetHandle(), childExtkey, childNum, false,
             (int)networkType, (int)CfdExtKeyType.Privkey,

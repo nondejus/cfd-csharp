@@ -5,13 +5,6 @@ namespace Cfd.xTests
 {
   public class CfdExtPrivkeyTest
   {
-    private readonly ITestOutputHelper output;
-
-    public CfdExtPrivkeyTest(ITestOutputHelper output)
-    {
-      this.output = output;
-    }
-
     [Fact]
     public void ExtPrivkeyMainnetTest()
     {

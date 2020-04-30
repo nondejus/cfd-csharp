@@ -5,13 +5,6 @@ namespace Cfd.xTests
 {
   public class CfdExtPubkeyTest
   {
-    private readonly ITestOutputHelper output;
-
-    public CfdExtPubkeyTest(ITestOutputHelper output)
-    {
-      this.output = output;
-    }
-
     [Fact]
     public void ExtPubkeyMainnetTest()
     {

@@ -1,9 +1,5 @@
 using System;
-using System.Security.Cryptography;
 
-/// <summary>
-/// cfd library namespace.
-/// </summary>
 namespace Cfd
 {
   /// <summary>

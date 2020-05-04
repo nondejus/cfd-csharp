@@ -1,9 +1,6 @@
 using System;
 using System.Numerics;
 
-/// <summary>
-/// cfd library namespace.
-/// </summary>
 namespace Cfd
 {
   /**

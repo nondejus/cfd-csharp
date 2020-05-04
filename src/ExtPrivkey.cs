@@ -1,7 +1,5 @@
 using System;
-/// <summary>
-/// cfd library namespace.
-/// </summary>
+
 namespace Cfd
 {
   public class ExtPrivkey : IEquatable<ExtPrivkey>

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-/// <summary>
-/// cfd library namespace.
-/// </summary>
+
 namespace Cfd
 {
   public static class CoinSelectionUtil

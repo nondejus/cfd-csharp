@@ -1,8 +1,5 @@
 using System;
-using System.Net.Http.Headers;
-/// <summary>
-/// cfd library namespace.
-/// </summary>
+
 namespace Cfd
 {
   /// <summary>

@@ -1,10 +1,6 @@
 using System;
-using System.Net.NetworkInformation;
 using System.Text;
 
-/// <summary>
-/// cfd library namespace.
-/// </summary>
 namespace Cfd
 {
   public class Script : IEquatable<Script>

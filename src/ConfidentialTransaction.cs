@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Cfd
 {
@@ -495,6 +496,7 @@ namespace Cfd
   /// </summary>
   public class ConfidentialTransaction
   {
+    public static readonly int defaultNetType = (int)CfdNetworkType.Liquidv1;
     private string tx;
     private string lastGetTx = "";
     private string txid = "";
@@ -1485,7 +1487,7 @@ namespace Cfd
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdAddPubkeyHashSign(
-            handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
+            handle.GetHandle(), defaultNetType,
             tx, txid.ToHexString(), vout, (int)hashType,
             pubkey.ToHexString(), signature.ToHexString(),
             signature.IsDerEncode(),
@@ -1558,7 +1560,7 @@ namespace Cfd
           }
 
           ret = NativeMethods.CfdFinalizeMultisigSign(
-              handle.GetHandle(), multiSignHandle, (int)CfdNetworkType.Liquidv1,
+              handle.GetHandle(), multiSignHandle, defaultNetType,
               tx, txid.ToHexString(), vout, (int)hashType,
               redeemScript.ToHexString(), out IntPtr txString);
           if (ret != CfdErrorCode.Success)
@@ -1606,7 +1608,7 @@ namespace Cfd
         for (uint index = 0; index < signList.Length; ++index)
         {
           ret = NativeMethods.CfdAddTxSign(
-              handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
+              handle.GetHandle(), defaultNetType,
               tempTx, txid.ToHexString(), vout, (int)hashType,
               signList[index].ToHexString(),
               signList[index].IsDerEncode(),
@@ -1622,7 +1624,7 @@ namespace Cfd
         }
 
         ret = NativeMethods.CfdAddScriptHashSign(
-            handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
+            handle.GetHandle(), defaultNetType,
             tempTx, txid.ToHexString(), vout, (int)hashType,
             redeemScript.ToHexString(), false, out txString);
         if (ret != CfdErrorCode.Success)
@@ -1646,7 +1648,7 @@ namespace Cfd
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdAddTxSign(
-            handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
+            handle.GetHandle(), defaultNetType,
             tx, txid.ToHexString(), vout, (int)hashType,
             signData.ToHexString(), signData.IsDerEncode(),
             (int)signData.GetSignatureHashType().SighashType,
@@ -1782,58 +1784,302 @@ namespace Cfd
       return false;
     }
 
-    public void EstimateFee()
+    public FeeData EstimateFee(ElementsUtxoData[] txinList,
+      ConfidentialAsset feeAsset)
     {
-      // FIXME 実装する
-      /*
-      internal static extern CfdErrorCode CfdInitializeEstimateFee(
-        [In] IntPtr handle,
-        [Out] out IntPtr feeHandle,
-        [In] bool isElements);
-
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-    internal static extern CfdErrorCode CfdAddTxInForEstimateFee(
-        [In] IntPtr handle,
-        [In] IntPtr feeHandle,
-        [In] string txid,
-        [In] uint vout,
-        [In] string descriptor,
-        [In] string asset,
-        [In] bool isIssuance,
-        [In] bool isBlindIssuance,
-        [In] bool isPegin,
-        [In] uint peginBtcTxSize,
-        [In] string fedpegScript);
-
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
-    internal static extern CfdErrorCode CfdFinalizeEstimateFee(
-        [In] IntPtr handle,
-        [In] IntPtr feeHandle,
-        [In] string txHex,
-        [In] string feeAsset,
-        [Out] out long txFee,
-        [Out] out long utxoFee,
-        [In] bool isBlind,
-        [In] double effectiveFeeRate);
-
-    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
-    internal static extern CfdErrorCode CfdFreeEstimateFeeHandle(
-        [In] IntPtr handle,
-        [In] IntPtr feeHandle);
-    */
+      return EstimateFee(txinList, 0.1, feeAsset, true);
     }
 
-    public void UpdateFee()
+    public FeeData EstimateFee(ElementsUtxoData[] txinList, double feeRate,
+      ConfidentialAsset feeAsset)
     {
-      // FIXME
-      // CfdUpdateConfidentialTxOut
+      return EstimateFee(txinList, feeRate, feeAsset, true);
     }
 
-    public void SetRawReissueAsset()
+    public FeeData EstimateFee(ElementsUtxoData[] txinList, double feeRate,
+      ConfidentialAsset feeAsset, bool isBlind)
     {
-      // FIXME
-      // CfdSetRawReissueAsset
+      if (txinList is null)
+      {
+        throw new ArgumentNullException(nameof(txinList));
+      }
+      if (feeAsset is null)
+      {
+        throw new ArgumentNullException(nameof(feeAsset));
+      }
+      if (feeAsset.HasBlinding())
+      {
+        throw new InvalidOperationException(
+          "fee asset has blinding. fee asset is unblind only.");
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdInitializeEstimateFee(
+          handle.GetHandle(), out IntPtr feeHandle, true);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        try
+        {
+          foreach (ElementsUtxoData txin in txinList)
+          {
+            ret = NativeMethods.CfdAddTxInForEstimateFee(
+              handle.GetHandle(), feeHandle, txin.GetOutPoint().GetTxid().ToHexString(),
+              txin.GetOutPoint().GetVout(), txin.GetDescriptor().ToString(),
+              txin.GetAsset(), txin.IsIssuance(), txin.IsBlindIssuance(),
+              txin.IsPegin(), txin.GetPeginBtcTxSize(),
+              (txin.GetFedpegScript() is null) ? "" : txin.GetFedpegScript().ToHexString());
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+          }
 
+          ret = NativeMethods.CfdFinalizeEstimateFee(
+              handle.GetHandle(), feeHandle, tx, feeAsset.ToHexString(),
+              out long txFee, out long utxoFee, isBlind, feeRate);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          return new FeeData(txFee, utxoFee);
+        }
+        finally
+        {
+          NativeMethods.CfdFreeEstimateFeeHandle(handle.GetHandle(), feeHandle);
+        }
+      }
+    }
+
+    public void UpdateFee(long feeAmount, ConfidentialAsset feeAsset)
+    {
+      if (feeAsset is null)
+      {
+        throw new ArgumentNullException(nameof(feeAsset));
+      }
+      if (feeAsset.HasBlinding())
+      {
+        throw new InvalidOperationException(
+          "fee asset has blinding. fee asset is unblind only.");
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
+          handle.GetHandle(), tx, "", "", out uint index);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+
+        ret = NativeMethods.CfdUpdateConfidentialTxOut(
+          handle.GetHandle(), tx, index, feeAsset.ToHexString(),
+          feeAmount, "", "", "", "", out IntPtr txString);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        tx = CCommon.ConvertToString(txString);
+      }
+    }
+
+    public ConfidentialAsset SetRawReissueAsset(OutPoint outpoint, long assetAmount,
+      ByteData blindingNonce, ByteData entropy, Address address)
+    {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      return SetRawReissueAsset(outpoint.GetTxid(), outpoint.GetVout(),
+        assetAmount, blindingNonce, entropy, address);
+    }
+
+    public ConfidentialAsset SetRawReissueAsset(Txid txid, uint vout, long assetAmount,
+      ByteData blindingNonce, ByteData entropy, Address address)
+    {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
+      if (blindingNonce is null)
+      {
+        throw new ArgumentNullException(nameof(blindingNonce));
+      }
+      if (entropy is null)
+      {
+        throw new ArgumentNullException(nameof(entropy));
+      }
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdSetRawReissueAsset(
+          handle.GetHandle(), tx, txid.ToHexString(), vout, assetAmount,
+          blindingNonce.ToHexString(), entropy.ToHexString(), address.ToAddressString(),
+          "", out IntPtr assetString, out IntPtr txString);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        var asset = CCommon.ConvertToString(assetString);
+        tx = CCommon.ConvertToString(txString);
+        return new ConfidentialAsset(asset);
+      }
+    }
+
+    public string[] FundRawTransaction(
+      ElementsUtxoData[] txinList, ElementsUtxoData[] utxoList,
+      IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
+      IDictionary<ConfidentialAsset, string> reservedAddressMap,
+      double effectiveFeeRate)
+    {
+      return FundRawTransaction(txinList, utxoList, targetAssetAmountMap,
+        reservedAddressMap, true, effectiveFeeRate, effectiveFeeRate, -1, -1);
+    }
+
+    public string[] FundRawTransaction(
+      ElementsUtxoData[] txinList, ElementsUtxoData[] utxoList,
+      IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
+      IDictionary<ConfidentialAsset, string> reservedAddressMap,
+      bool isBlind, double effectiveFeeRate, double longTermFeeRate,
+      long dustFeeRate, long knapsackMinChange)
+    {
+      if (txinList is null)
+      {
+        throw new ArgumentNullException(nameof(txinList));
+      }
+      if (utxoList is null)
+      {
+        throw new ArgumentNullException(nameof(utxoList));
+      }
+      if (targetAssetAmountMap is null)
+      {
+        throw new ArgumentNullException(nameof(targetAssetAmountMap));
+      }
+      if (reservedAddressMap is null)
+      {
+        throw new ArgumentNullException(nameof(reservedAddressMap));
+      }
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdInitializeFundRawTx(
+          handle.GetHandle(), defaultNetType, 1, "", out IntPtr fundHandle);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        try
+        {
+          foreach (var txin in txinList)
+          {
+            ret = NativeMethods.CfdAddTxInForFundRawTx(
+              handle.GetHandle(), fundHandle,
+              txin.GetOutPoint().GetTxid().ToHexString(),
+              txin.GetOutPoint().GetVout(),
+              txin.GetAmount(), txin.GetDescriptor().ToString(),
+              txin.GetAsset(), txin.IsIssuance(), txin.IsBlindIssuance(),
+              txin.IsPegin(), txin.GetPeginBtcTxSize(),
+              (txin.GetFedpegScript() is null) ? "" : txin.GetFedpegScript().ToHexString());
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+          }
+
+          foreach (var utxo in utxoList)
+          {
+            ret = NativeMethods.CfdAddUtxoForFundRawTx(
+              handle.GetHandle(), fundHandle,
+              utxo.GetOutPoint().GetTxid().ToHexString(),
+              utxo.GetOutPoint().GetVout(),
+              utxo.GetAmount(), utxo.GetDescriptor().ToString(),
+              utxo.GetAsset());
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+          }
+
+          uint assetIndex = 0;
+          foreach (var key in targetAssetAmountMap.Keys)
+          {
+            string reservedAddress = (reservedAddressMap.ContainsKey(key)) ?
+              reservedAddressMap[key] : "";
+            ret = NativeMethods.CfdAddTargetAmountForFundRawTx(
+              handle.GetHandle(), fundHandle, assetIndex,
+              targetAssetAmountMap[key], key.ToHexString(),
+              reservedAddress);
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+            ++assetIndex;
+          }
+
+          ret = NativeMethods.CfdSetOptionFundRawTx(
+            handle.GetHandle(), fundHandle,
+            CfdFundTxOption.UseBlind, 0, 0, isBlind);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          ret = NativeMethods.CfdSetOptionFundRawTx(
+            handle.GetHandle(), fundHandle,
+            CfdFundTxOption.DustFeeRate, 0, dustFeeRate, false);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          ret = NativeMethods.CfdSetOptionFundRawTx(
+            handle.GetHandle(), fundHandle,
+            CfdFundTxOption.LongTermFeeRate, 0, longTermFeeRate, false);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          ret = NativeMethods.CfdSetOptionFundRawTx(
+            handle.GetHandle(), fundHandle,
+            CfdFundTxOption.KnapsackMinChange, knapsackMinChange, 0, false);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+
+          ret = NativeMethods.CfdFinalizeFundRawTx(
+            handle.GetHandle(), fundHandle, tx, effectiveFeeRate,
+            out long txFee, out uint appendTxOutCount, out IntPtr outputTxHex);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          string fundTx = CCommon.ConvertToString(outputTxHex);
+          if (appendTxOutCount > 1)
+          {
+            throw new InvalidProgramException("Invalid txout append count.");
+          }
+
+          string[] usedReserveAddressList = new string[appendTxOutCount];
+          for (uint index = 0; index < appendTxOutCount; ++index)
+          {
+            ret = NativeMethods.CfdGetAppendTxOutFundRawTx(
+              handle.GetHandle(), fundHandle, index, out IntPtr appendAddress);
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+            usedReserveAddressList[index] = CCommon.ConvertToString(appendAddress);
+          }
+
+          tx = fundTx;
+          return usedReserveAddressList;
+        }
+        finally
+        {
+          NativeMethods.CfdFreeFundRawTxHandle(handle.GetHandle(), fundHandle);
+        }
+      }
     }
 
     public string ToHexString()

@@ -181,7 +181,7 @@ namespace Cfd
         [In] IntPtr handle,
         [In] IntPtr coinSelectHandle,
         [In] uint index,
-        [Out] out uint utxoIndex);
+        [Out] out int utxoIndex);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
     internal static extern CfdErrorCode CfdGetSelectedCoinAssetAmount(
@@ -643,6 +643,44 @@ namespace Cfd
           [Out] out IntPtr signature);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdVerifyEcSignature(
+          [In] IntPtr handle,
+          [In] string sighash,
+          [In] string pubkey,
+          [In] string signature);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdCalculateSchnorrSignature(
+          [In] IntPtr handle,
+          [In] string oraclePrivkey,
+          [In] string kValue,
+          [In] string message,
+          [Out] out IntPtr signature);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdVerifySchnorrSignatureWithNonce(
+          [In] IntPtr handle,
+          [In] string oraclePrivkey,
+          [In] string kValue,
+          [In] string message,
+          [Out] out IntPtr signature);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdVerifySchnorrSignature(
+          [In] IntPtr handle,
+          [In] string pubkey,
+          [In] string signature,
+          [In] string message);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdVerifySchnorrSignatureWithNonce(
+          [In] IntPtr handle,
+          [In] string pubkey,
+          [In] string nonce,
+          [In] string signature,
+          [In] string message);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdEncodeSignatureByDer(
           [In] IntPtr handle,
           [In] string signature,
@@ -777,6 +815,20 @@ namespace Cfd
           [In] IntPtr handle,
           [In] string privkey,
           [Out] out IntPtr output);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdGetSchnorrPubkey(
+          [In] IntPtr handle,
+          [In] string oraclePubkey,
+          [In] string oracleRPoint,
+          [In] string message,
+          [Out] out IntPtr output);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdGetSchnorrPublicNonce(
+          [In] IntPtr handle,
+          [In] string privkey,
+          [Out] out IntPtr nonce);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdCreateExtkeyFromSeed(
@@ -1054,6 +1106,35 @@ namespace Cfd
     internal static extern CfdErrorCode CfdFreeMultisigSignHandle(
         [In] IntPtr handle,
         [In] IntPtr multiSignHandle);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdVerifySignature(
+        [In] IntPtr handle,
+        [In] int networktype,
+        [In] string txhex,
+        [In] string signature,
+        [In] int hashType,
+        [In] string pubkey,
+        [In] string redeemScript,
+        [In] string txid,
+        [In] uint vout,
+        [In] int sighashType,
+        [In] bool sighashAnyoneCanPay,
+        [In] long valueSatoshi,
+        [In] string valueBytedata);
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
+    internal static extern CfdErrorCode CfdVerifyTxSign(
+        [In] IntPtr handle,
+        [In] int networktype,
+        [In] string txhex,
+        [In] string txid,
+        [In] uint vout,
+        [In] string address,
+        [In] int addressType,
+        [In] string directLockingScript,
+        [In] long valueSatoshi,
+        [In] string valueBytedata);
 
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdCreateSighash(

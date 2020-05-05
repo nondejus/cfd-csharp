@@ -547,7 +547,7 @@ namespace Cfd
         [In] int hashType,
         [In] string pubkey,
         [In] string privkey,
-        [In] Int64 valueSatoshi,
+        [In] long valueSatoshi,
         [In] string valueCommitment,
         [In] int sighashType,
         [In] bool sighashAnyoneCanPay,
@@ -933,7 +933,7 @@ namespace Cfd
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
     internal static extern CfdErrorCode CfdConvertMnemonicToSeed(
           [In] IntPtr handle,
-          [In] string mnemonic,
+          [In] byte[] mnemonic,
           [In] string passphrase,
           [In] bool strictCheck,
           [In] string language,

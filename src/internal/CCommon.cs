@@ -15,7 +15,7 @@ namespace Cfd
       var result = "";
       if (address != IntPtr.Zero)
       {
-        result = Marshal.PtrToStringAnsi(address);
+        result = Marshal.PtrToStringUTF8(address);
         NativeMethods.CfdFreeBuffer(address);
       }
       return result;

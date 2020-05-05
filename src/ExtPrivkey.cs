@@ -41,6 +41,7 @@ namespace Cfd
           out version, out fingerprint,
           out chainCode, out depth, out childNumber, out _);
         privkey = GetPrivkeyFromExtKey(handle, extkey, networkType);
+        this.networkType = networkType;
       }
     }
 

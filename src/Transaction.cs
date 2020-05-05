@@ -533,7 +533,7 @@ namespace Cfd
         throw new ArgumentNullException(nameof(txid));
       }
       TxIn txin = new TxIn(new OutPoint(txid, vout), sequence);
-      tx = CreateTransaction(0, 0, tx, new TxIn[] { txin }, null);
+      tx = CreateTransaction(0, 0, tx, new [] { txin }, null);
     }
 
     /// <summary>
@@ -622,7 +622,7 @@ namespace Cfd
         throw new ArgumentNullException(nameof(lockingScript));
       }
       TxOut txout = new TxOut(satoshiValue, lockingScript);
-      tx = CreateTransaction(0, 0, tx, null, new TxOut[] { txout });
+      tx = CreateTransaction(0, 0, tx, null, new [] { txout });
     }
 
     public void AddTxOutList(TxOut[] txoutList)

@@ -4,8 +4,8 @@ namespace Cfd
 {
   public class ConfidentialAsset
   {
-    const UInt32 Size = 32;
-    const UInt32 CommitmentSize = 33;
+    const uint Size = 32;
+    const uint CommitmentSize = 33;
     private readonly string commitment;
 
     public ConfidentialAsset()

@@ -5,7 +5,7 @@ namespace Cfd
 {
   public class ConfidentialValue
   {
-    const UInt32 CommitmentSize = 33;
+    const uint CommitmentSize = 33;
     private readonly string commitmentValue;
     private readonly long satoshiValue;
 

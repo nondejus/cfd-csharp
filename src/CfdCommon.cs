@@ -57,9 +57,9 @@ namespace Cfd
       }
 
       var errorMessage = message;
-      if (String.IsNullOrEmpty(errorMessage))
+      if (string.IsNullOrEmpty(errorMessage))
       {
-        errorMessage = String.Format(CultureInfo.InvariantCulture, "CFD error[{0}]", errorCode);
+        errorMessage = string.Format(CultureInfo.InvariantCulture, "CFD error[{0}]", errorCode);
       }
       switch (errorCode)
       {

@@ -311,7 +311,7 @@ namespace Cfd
   {
     public OutPoint OutPoint { get; }
     public Script ScriptSig { get; }
-    public UInt32 Sequence { get; }
+    public uint Sequence { get; }
     public ScriptWitness WitnessStack { get; }
     public ScriptWitness PeginWitness { get; }
     public IssuanceData Issuance { get; }
@@ -332,7 +332,7 @@ namespace Cfd
           Array.Empty<byte>(), Array.Empty<byte>());
     }
 
-    public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence)
+    public ConfidentialTxIn(OutPoint outPoint, uint sequence)
     {
       this.OutPoint = outPoint;
       this.ScriptSig = new Script();
@@ -356,7 +356,7 @@ namespace Cfd
           Array.Empty<byte>(), Array.Empty<byte>());
     }
 
-    public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence, ScriptWitness scriptWitness)
+    public ConfidentialTxIn(OutPoint outPoint, uint sequence, ScriptWitness scriptWitness)
     {
       this.OutPoint = outPoint;
       this.ScriptSig = new Script();
@@ -377,7 +377,7 @@ namespace Cfd
       this.PeginWitness = peginWitness;
       this.Issuance = issuance;
     }
-    public ConfidentialTxIn(OutPoint outPoint, UInt32 sequence, Script scriptSig, ScriptWitness witnessStack, ScriptWitness peginWitness, IssuanceData issuance)
+    public ConfidentialTxIn(OutPoint outPoint, uint sequence, Script scriptSig, ScriptWitness witnessStack, ScriptWitness peginWitness, IssuanceData issuance)
     {
       this.OutPoint = outPoint;
       this.ScriptSig = scriptSig;

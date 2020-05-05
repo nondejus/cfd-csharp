@@ -224,7 +224,7 @@ namespace Cfd
 
     public bool IsEmpty()
     {
-      return String.IsNullOrEmpty(script);
+      return string.IsNullOrEmpty(script);
     }
 
     public string ToHexString()

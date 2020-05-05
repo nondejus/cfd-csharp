@@ -289,7 +289,7 @@ namespace Cfd
       }
       if ((obj as HDWallet) != null)
       {
-        return this.Equals((HDWallet)obj);
+        return Equals((HDWallet)obj);
       }
       return false;
     }

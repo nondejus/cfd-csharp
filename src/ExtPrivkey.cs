@@ -273,7 +273,7 @@ namespace Cfd
       }
       if ((obj as ExtPrivkey) != null)
       {
-        return this.Equals((ExtPrivkey)obj);
+        return Equals((ExtPrivkey)obj);
       }
       return false;
     }

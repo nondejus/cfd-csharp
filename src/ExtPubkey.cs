@@ -291,7 +291,7 @@ namespace Cfd
       }
       if ((obj as ExtPubkey) != null)
       {
-        return this.Equals((ExtPubkey)obj);
+        return Equals((ExtPubkey)obj);
       }
       return false;
     }

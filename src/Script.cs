@@ -268,7 +268,7 @@ namespace Cfd
       }
       if ((obj as Script) != null)
       {
-        return this.Equals((Script)obj);
+        return Equals((Script)obj);
       }
       return false;
     }

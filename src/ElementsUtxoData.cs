@@ -129,7 +129,7 @@ namespace Cfd
         Descriptor descriptor, bool isBlindIssuance)
           : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor)
     {
-      this.isIssuance = true;
+      isIssuance = true;
       this.isBlindIssuance = isBlindIssuance;
     }
 
@@ -142,7 +142,7 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(fedpegScript));
       }
-      this.isPegin = true;
+      isPegin = true;
       this.peginBtcTxSize = peginBtcTxSize;
       this.fedpegScript = fedpegScript;
     }
@@ -209,7 +209,7 @@ namespace Cfd
       }
       if ((obj as ElementsUtxoData) != null)
       {
-        return this.Equals((ElementsUtxoData)obj);
+        return Equals((ElementsUtxoData)obj);
       }
       return false;
     }

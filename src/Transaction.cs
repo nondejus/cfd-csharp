@@ -49,7 +49,7 @@ namespace Cfd
       }
       if (obj is FeeData)
       {
-        return this.Equals((FeeData)obj);
+        return Equals((FeeData)obj);
       }
       return false;
     }
@@ -91,8 +91,8 @@ namespace Cfd
     /// <param name="sighashAnyoneCanPay">sighash anyone can pay.</param>
     public SignatureHashType(CfdSighashType sighashType, bool sighashAnyoneCanPay)
     {
-      this.SighashType = sighashType;
-      this.IsSighashAnyoneCanPay = sighashAnyoneCanPay;
+      SighashType = sighashType;
+      IsSighashAnyoneCanPay = sighashAnyoneCanPay;
     }
 
     public bool Equals(SignatureHashType other)
@@ -109,7 +109,7 @@ namespace Cfd
       }
       if (obj is SignatureHashType)
       {
-        return this.Equals((SignatureHashType)obj);
+        return Equals((SignatureHashType)obj);
       }
       return false;
     }
@@ -159,10 +159,10 @@ namespace Cfd
     /// <param name="outPoint">outpoint</param>
     public TxIn(OutPoint outPoint)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = CfdSequenceLockTime.Disable;
-      this.WitnessStack = new ScriptWitness();
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = CfdSequenceLockTime.Disable;
+      WitnessStack = new ScriptWitness();
     }
 
     /// <summary>
@@ -172,10 +172,10 @@ namespace Cfd
     /// <param name="sequence">sequence number</param>
     public TxIn(OutPoint outPoint, uint sequence)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = sequence;
-      this.WitnessStack = new ScriptWitness();
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = sequence;
+      WitnessStack = new ScriptWitness();
     }
 
     /// <summary>
@@ -185,10 +185,10 @@ namespace Cfd
     /// <param name="scriptWitness">witness stack</param>
     public TxIn(OutPoint outPoint, ScriptWitness scriptWitness)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = CfdSequenceLockTime.Disable;
-      this.WitnessStack = scriptWitness;
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = CfdSequenceLockTime.Disable;
+      WitnessStack = scriptWitness;
     }
 
     /// <summary>
@@ -199,10 +199,10 @@ namespace Cfd
     /// <param name="scriptWitness">witness stack</param>
     public TxIn(OutPoint outPoint, uint sequence, ScriptWitness scriptWitness)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = sequence;
-      this.WitnessStack = scriptWitness;
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = sequence;
+      WitnessStack = scriptWitness;
     }
 
     /// <summary>
@@ -213,10 +213,10 @@ namespace Cfd
     /// <param name="scriptWitness">witness stack</param>
     public TxIn(OutPoint outPoint, Script scriptSig, ScriptWitness scriptWitness)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = scriptSig;
-      this.Sequence = CfdSequenceLockTime.Disable;
-      this.WitnessStack = scriptWitness;
+      OutPoint = outPoint;
+      ScriptSig = scriptSig;
+      Sequence = CfdSequenceLockTime.Disable;
+      WitnessStack = scriptWitness;
     }
 
     /// <summary>
@@ -228,10 +228,10 @@ namespace Cfd
     /// <param name="scriptWitness">witness stack</param>
     public TxIn(OutPoint outPoint, uint sequence, Script scriptSig, ScriptWitness scriptWitness)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = scriptSig;
-      this.Sequence = sequence;
-      this.WitnessStack = scriptWitness;
+      OutPoint = outPoint;
+      ScriptSig = scriptSig;
+      Sequence = sequence;
+      WitnessStack = scriptWitness;
     }
 
     public bool Equals(TxIn other)
@@ -247,7 +247,7 @@ namespace Cfd
       }
       if (obj is TxIn)
       {
-        return this.Equals((TxIn)obj);
+        return Equals((TxIn)obj);
       }
       return false;
     }
@@ -289,8 +289,8 @@ namespace Cfd
     /// <param name="scriptPubkey">locking script</param>
     public TxOut(long satoshiValue, Script scriptPubkey)
     {
-      this.SatoshiValue = satoshiValue;
-      this.ScriptPubkey = scriptPubkey;
+      SatoshiValue = satoshiValue;
+      ScriptPubkey = scriptPubkey;
     }
 
     public bool Equals(TxOut other)
@@ -306,7 +306,7 @@ namespace Cfd
       }
       if (obj is TxOut)
       {
-        return this.Equals((TxOut)obj);
+        return Equals((TxOut)obj);
       }
       return false;
     }

@@ -34,7 +34,7 @@ namespace Cfd
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to txid size.");
       }
       var txidBytes = CfdCommon.ReverseBytes(bytes);
-      this.txid = StringUtil.FromBytes(txidBytes);
+      txid = StringUtil.FromBytes(txidBytes);
     }
 
     public string ToHexString()
@@ -70,7 +70,7 @@ namespace Cfd
       }
       if ((obj as Txid) != null)
       {
-        return this.Equals((Txid)obj);
+        return Equals((Txid)obj);
       }
       return false;
     }

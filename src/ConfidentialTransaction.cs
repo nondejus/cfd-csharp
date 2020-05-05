@@ -24,9 +24,9 @@ namespace Cfd
 
     public CfdBlindOptionData(long minimumRangeValue, int exponent, int minimumBits)
     {
-      this.MinimumRangeValue = minimumRangeValue;
-      this.Exponent = exponent;
-      this.MinimumBits = minimumBits;
+      MinimumRangeValue = minimumRangeValue;
+      Exponent = exponent;
+      MinimumBits = minimumBits;
     }
 
     public bool Equals(CfdBlindOptionData other)
@@ -40,7 +40,7 @@ namespace Cfd
     {
       if (obj is CfdBlindOptionData)
       {
-        return this.Equals((CfdBlindOptionData)obj);
+        return Equals((CfdBlindOptionData)obj);
       }
       return false;
     }
@@ -80,10 +80,10 @@ namespace Cfd
     /// <param name="amountBlindFactor">amount blinder</param>
     public AssetValueData(string asset, long satoshiValue, BlindFactor assetBlindFactor, BlindFactor amountBlindFactor)
     {
-      this.Asset = asset;
-      this.SatoshiValue = satoshiValue;
-      this.AssetBlindFactor = assetBlindFactor;
-      this.AmountBlindFactor = amountBlindFactor;
+      Asset = asset;
+      SatoshiValue = satoshiValue;
+      AssetBlindFactor = assetBlindFactor;
+      AmountBlindFactor = amountBlindFactor;
     }
 
     /// <summary>
@@ -93,10 +93,10 @@ namespace Cfd
     /// <param name="satoshiValue">satoshi amount</param>
     public AssetValueData(string asset, long satoshiValue)
     {
-      this.Asset = asset;
-      this.SatoshiValue = satoshiValue;
-      this.AssetBlindFactor = new BlindFactor();
-      this.AmountBlindFactor = new BlindFactor();
+      Asset = asset;
+      SatoshiValue = satoshiValue;
+      AssetBlindFactor = new BlindFactor();
+      AmountBlindFactor = new BlindFactor();
     }
 
     /// <summary>
@@ -107,10 +107,10 @@ namespace Cfd
     /// <param name="amountBlindFactor">amount blinder</param>
     public AssetValueData(string asset, long satoshiValue, BlindFactor amountBlindFactor)
     {
-      this.Asset = asset;
-      this.SatoshiValue = satoshiValue;
-      this.AssetBlindFactor = new BlindFactor();
-      this.AmountBlindFactor = amountBlindFactor;
+      Asset = asset;
+      SatoshiValue = satoshiValue;
+      AssetBlindFactor = new BlindFactor();
+      AmountBlindFactor = amountBlindFactor;
     }
 
     public bool Equals(AssetValueData other)
@@ -123,7 +123,7 @@ namespace Cfd
     {
       if (obj is AssetValueData)
       {
-        return this.Equals((AssetValueData)obj);
+        return Equals((AssetValueData)obj);
       }
       return false;
     }
@@ -168,7 +168,7 @@ namespace Cfd
     {
       if (obj is UnblindIssuanceData)
       {
-        return this.Equals((UnblindIssuanceData)obj);
+        return Equals((UnblindIssuanceData)obj);
       }
       return false;
     }
@@ -204,8 +204,8 @@ namespace Cfd
     /// <param name="tokenKey">token blinding key</param>
     public IssuanceKeys(Privkey assetKey, Privkey tokenKey)
     {
-      this.AssetKey = assetKey;
-      this.TokenKey = tokenKey;
+      AssetKey = assetKey;
+      TokenKey = tokenKey;
     }
 
     /// <summary>
@@ -214,8 +214,8 @@ namespace Cfd
     /// <param name="assetKey">asset blinding key</param>
     public IssuanceKeys(Privkey assetKey)
     {
-      this.AssetKey = assetKey;
-      this.TokenKey = new Privkey();
+      AssetKey = assetKey;
+      TokenKey = new Privkey();
     }
 
     public bool Equals(IssuanceKeys other)
@@ -228,7 +228,7 @@ namespace Cfd
     {
       if (obj is IssuanceKeys)
       {
-        return this.Equals((IssuanceKeys)obj);
+        return Equals((IssuanceKeys)obj);
       }
       return false;
     }
@@ -265,12 +265,12 @@ namespace Cfd
         ConfidentialValue issuanceAmount, ConfidentialValue tokenAmount,
         byte[] issuanceRangeproof, byte[] tokenRangeproof)
     {
-      this.BlindingNonce = new ByteData(blindingNonce);
-      this.AssetEntropy = new ByteData(assetEntropy);
-      this.IssuanceAmount = issuanceAmount;
-      this.InflationKeys = tokenAmount;
-      this.IssuanceAmountRangeproof = new ByteData(issuanceRangeproof);
-      this.InflationKeysRangeproof = new ByteData(tokenRangeproof);
+      BlindingNonce = new ByteData(blindingNonce);
+      AssetEntropy = new ByteData(assetEntropy);
+      IssuanceAmount = issuanceAmount;
+      InflationKeys = tokenAmount;
+      IssuanceAmountRangeproof = new ByteData(issuanceRangeproof);
+      InflationKeysRangeproof = new ByteData(tokenRangeproof);
     }
 
     public bool Equals(IssuanceData other)
@@ -283,7 +283,7 @@ namespace Cfd
     {
       if (obj is IssuanceData)
       {
-        return this.Equals((IssuanceData)obj);
+        return Equals((IssuanceData)obj);
       }
       return false;
     }
@@ -322,69 +322,69 @@ namespace Cfd
     /// <param name="outPoint">outpoint</param>
     public ConfidentialTxIn(OutPoint outPoint)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = CfdSequenceLockTime.Disable;
-      this.WitnessStack = new ScriptWitness();
-      this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = CfdSequenceLockTime.Disable;
+      WitnessStack = new ScriptWitness();
+      PeginWitness = new ScriptWitness();
+      Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
           Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, uint sequence)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = sequence;
-      this.WitnessStack = new ScriptWitness();
-      this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = sequence;
+      WitnessStack = new ScriptWitness();
+      PeginWitness = new ScriptWitness();
+      Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
           Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, ScriptWitness scriptWitness)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = CfdSequenceLockTime.Disable;
-      this.WitnessStack = scriptWitness;
-      this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = CfdSequenceLockTime.Disable;
+      WitnessStack = scriptWitness;
+      PeginWitness = new ScriptWitness();
+      Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
           Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, uint sequence, ScriptWitness scriptWitness)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = new Script();
-      this.Sequence = sequence;
-      this.WitnessStack = scriptWitness;
-      this.PeginWitness = new ScriptWitness();
-      this.Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
+      OutPoint = outPoint;
+      ScriptSig = new Script();
+      Sequence = sequence;
+      WitnessStack = scriptWitness;
+      PeginWitness = new ScriptWitness();
+      Issuance = new IssuanceData(Array.Empty<byte>(), Array.Empty<byte>(),
           new ConfidentialValue(), new ConfidentialValue(),
           Array.Empty<byte>(), Array.Empty<byte>());
     }
 
     public ConfidentialTxIn(OutPoint outPoint, Script scriptSig, ScriptWitness witnessStack, ScriptWitness peginWitness, IssuanceData issuance)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = scriptSig;
-      this.Sequence = CfdSequenceLockTime.Disable;
-      this.WitnessStack = witnessStack;
-      this.PeginWitness = peginWitness;
-      this.Issuance = issuance;
+      OutPoint = outPoint;
+      ScriptSig = scriptSig;
+      Sequence = CfdSequenceLockTime.Disable;
+      WitnessStack = witnessStack;
+      PeginWitness = peginWitness;
+      Issuance = issuance;
     }
     public ConfidentialTxIn(OutPoint outPoint, uint sequence, Script scriptSig, ScriptWitness witnessStack, ScriptWitness peginWitness, IssuanceData issuance)
     {
-      this.OutPoint = outPoint;
-      this.ScriptSig = scriptSig;
-      this.Sequence = sequence;
-      this.WitnessStack = witnessStack;
-      this.PeginWitness = peginWitness;
-      this.Issuance = issuance;
+      OutPoint = outPoint;
+      ScriptSig = scriptSig;
+      Sequence = sequence;
+      WitnessStack = witnessStack;
+      PeginWitness = peginWitness;
+      Issuance = issuance;
     }
 
     public bool Equals(ConfidentialTxIn other)
@@ -396,7 +396,7 @@ namespace Cfd
     {
       if (obj is ConfidentialTxIn)
       {
-        return this.Equals((ConfidentialTxIn)obj);
+        return Equals((ConfidentialTxIn)obj);
       }
       return false;
     }
@@ -431,33 +431,33 @@ namespace Cfd
 
     public ConfidentialTxOut(ConfidentialAsset asset, long value)
     {
-      this.Asset = asset;
-      this.Value = new ConfidentialValue(value);
-      this.ScriptPubkey = new Script();
-      this.Nonce = new ByteData(Array.Empty<byte>());
-      this.SurjectionProof = new ByteData(Array.Empty<byte>());
-      this.RangeProof = new ByteData(Array.Empty<byte>());
+      Asset = asset;
+      Value = new ConfidentialValue(value);
+      ScriptPubkey = new Script();
+      Nonce = new ByteData(Array.Empty<byte>());
+      SurjectionProof = new ByteData(Array.Empty<byte>());
+      RangeProof = new ByteData(Array.Empty<byte>());
     }
 
     public ConfidentialTxOut(ConfidentialAsset asset, ConfidentialValue value, Script scriptPubkey)
     {
-      this.Asset = asset;
-      this.Value = value;
-      this.ScriptPubkey = scriptPubkey;
-      this.Nonce = new ByteData(Array.Empty<byte>());
-      this.SurjectionProof = new ByteData(Array.Empty<byte>());
-      this.RangeProof = new ByteData(Array.Empty<byte>());
+      Asset = asset;
+      Value = value;
+      ScriptPubkey = scriptPubkey;
+      Nonce = new ByteData(Array.Empty<byte>());
+      SurjectionProof = new ByteData(Array.Empty<byte>());
+      RangeProof = new ByteData(Array.Empty<byte>());
     }
 
     public ConfidentialTxOut(ConfidentialAsset asset, ConfidentialValue value,
         Script scriptPubkey, byte[] nonce, byte[] surjectionProof, byte[] rangeProof)
     {
-      this.Asset = asset;
-      this.Value = value;
-      this.ScriptPubkey = scriptPubkey;
-      this.Nonce = new ByteData(nonce);
-      this.SurjectionProof = new ByteData(surjectionProof);
-      this.RangeProof = new ByteData(rangeProof);
+      Asset = asset;
+      Value = value;
+      ScriptPubkey = scriptPubkey;
+      Nonce = new ByteData(nonce);
+      SurjectionProof = new ByteData(surjectionProof);
+      RangeProof = new ByteData(rangeProof);
     }
 
     public bool Equals(ConfidentialTxOut other)
@@ -469,7 +469,7 @@ namespace Cfd
     {
       if (obj is ConfidentialTxOut)
       {
-        return this.Equals((ConfidentialTxOut)obj);
+        return Equals((ConfidentialTxOut)obj);
       }
       return false;
     }

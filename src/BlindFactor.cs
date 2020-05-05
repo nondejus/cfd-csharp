@@ -50,7 +50,7 @@ namespace Cfd
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to blindFactor size.");
       }
       var blindFactorBytes = CfdCommon.ReverseBytes(bytes);
-      this.hexString = StringUtil.FromBytes(blindFactorBytes);
+      hexString = StringUtil.FromBytes(blindFactorBytes);
     }
 
     /// <summary>

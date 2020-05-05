@@ -67,7 +67,7 @@ namespace Cfd
       }
       if ((obj as OutPoint) != null)
       {
-        return this.Equals((OutPoint)obj);
+        return Equals((OutPoint)obj);
       }
       return false;
     }

@@ -23,7 +23,7 @@ namespace Cfd
       {
         CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to asset size.");
       }
-      this.commitment = asset;
+      commitment = asset;
     }
 
     public ConfidentialAsset(byte[] asset)
@@ -39,11 +39,11 @@ namespace Cfd
       if (asset.Length == Size)
       {
         var assetBytes = CfdCommon.ReverseBytes(asset);
-        this.commitment = StringUtil.FromBytes(assetBytes);
+        commitment = StringUtil.FromBytes(assetBytes);
       }
       else
       {
-        this.commitment = StringUtil.FromBytes(asset);
+        commitment = StringUtil.FromBytes(asset);
       }
     }
 

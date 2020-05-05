@@ -17,14 +17,14 @@ namespace Cfd
 
     public ConfidentialValue(long satoshiValue)
     {
-      this.commitmentValue = "";
+      commitmentValue = "";
       this.satoshiValue = satoshiValue;
     }
 
     public ConfidentialValue(string commitmentValue)
     {
       this.commitmentValue = commitmentValue;
-      this.satoshiValue = 0;
+      satoshiValue = 0;
     }
 
     public ConfidentialValue(string commitmentValue, long satoshiValue)

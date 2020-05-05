@@ -104,7 +104,7 @@ namespace Cfd
       }
       if ((obj as UtxoData) != null)
       {
-        return this.Equals((UtxoData)obj);
+        return Equals((UtxoData)obj);
       }
       return false;
     }

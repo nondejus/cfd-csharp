@@ -2,10 +2,10 @@ using Xunit;
 
 namespace Cfd.xTests
 {
-  public class CfdPubkeyTest
+  public class PubkeyTest
   {
     [Fact]
-    public void PubkeyTest()
+    public void ConstructorTest()
     {
       Pubkey pubkey = new Pubkey("031d7463018f867de51a27db866f869ceaf52abab71827a6051bab8a0fd020f4c1");
       Assert.True(pubkey.IsValid());

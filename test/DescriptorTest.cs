@@ -3,11 +3,11 @@ using Xunit.Abstractions;
 
 namespace Cfd.xTests
 {
-  public class CfdDescriptorTest
+  public class DescriptorTest
   {
     private readonly ITestOutputHelper output;
 
-    public CfdDescriptorTest(ITestOutputHelper output)
+    public DescriptorTest(ITestOutputHelper output)
     {
       this.output = output;
     }

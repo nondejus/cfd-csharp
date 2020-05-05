@@ -2,10 +2,10 @@ using Xunit;
 
 namespace Cfd.xTests
 {
-  public class CfdAddressTest
+  public class AddressTest
   {
     [Fact]
-    public void AddressTest()
+    public void ConstructorTest()
     {
       string addrStr = "bcrt1q576jgpgewxwu205cpjq4s4j5tprxlq38l7kd85";
       Cfd.Address addr = new Cfd.Address(addrStr);

@@ -3,7 +3,7 @@ using Xunit.Abstractions;
 
 namespace Cfd.xTests
 {
-  public class CfdExtPubkeyTest
+  public class ExtPubkeyTest
   {
     [Fact]
     public void ExtPubkeyMainnetTest()

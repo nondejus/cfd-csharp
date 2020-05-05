@@ -2,7 +2,7 @@ using Xunit;
 
 namespace Cfd.xTests
 {
-  public class CfdUtilTest
+  public class UtilTest
   {
     [Fact]
     public void TxidAndOutPointTest()

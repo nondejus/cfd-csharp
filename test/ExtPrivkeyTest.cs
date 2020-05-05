@@ -3,7 +3,7 @@ using Xunit.Abstractions;
 
 namespace Cfd.xTests
 {
-  public class CfdExtPrivkeyTest
+  public class ExtPrivkeyTest
   {
     [Fact]
     public void ExtPrivkeyMainnetTest()

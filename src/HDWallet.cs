@@ -85,7 +85,7 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(mnemonic));
       }
-      string[] words = mnemonic.Split(new [] { ' ', '　' });
+      string[] words = mnemonic.Split(new[] { ' ', '　' });
       return ConvertMnemonicToEntropy(words, language);
     }
 
@@ -125,7 +125,7 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(mnemonic));
       }
-      string[] words = mnemonic.Split(new [] { ' ', '　' });
+      string[] words = mnemonic.Split(new[] { ' ', '　' });
       return ConvertMnemonicToSeed(words, passphrase, language, false);
     }
 
@@ -183,7 +183,7 @@ namespace Cfd
     }
 
     public HDWallet(string mnemonic, string passphrase, string language)
-      : this((mnemonic is null) ? Array.Empty<string>() : mnemonic.Split(new [] { ' ', '　' }),
+      : this((mnemonic is null) ? Array.Empty<string>() : mnemonic.Split(new[] { ' ', '　' }),
           passphrase, language)
     {
       // do nothing

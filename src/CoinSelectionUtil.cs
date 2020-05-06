@@ -3,16 +3,49 @@ using System.Collections.Generic;
 
 namespace Cfd
 {
-  public static class CoinSelectionUtil
+  public class CoinSelectionUtil
   {
-    public static UtxoData[] SelectCoins(UtxoData[] utxoList, long txFeeAmount, long targetAmount,
+    private long lastSelectedUtxoFee;
+
+    public static long GetTotalAmount(UtxoData[] utxoList)
+    {
+      if (utxoList is null)
+      {
+        return 0;
+      }
+      long amount = 0;
+      foreach (var utxo in utxoList)
+      {
+        amount += utxo.GetAmount();
+      }
+      return amount;
+    }
+
+    public static long GetTotalAmount(ElementsUtxoData[] utxoList, ConfidentialAsset asset)
+    {
+      if ((utxoList is null) || (asset is null))
+      {
+        return 0;
+      }
+      long amount = 0;
+      foreach (var utxo in utxoList)
+      {
+        if (utxo.GetAsset() == asset.ToHexString())
+        {
+          amount += utxo.GetAmount();
+        }
+      }
+      return amount;
+    }
+
+    public UtxoData[] SelectCoins(UtxoData[] utxoList, long txFeeAmount, long targetAmount,
       double effectiveFeeRate)
     {
       return SelectCoins(utxoList, txFeeAmount, targetAmount, effectiveFeeRate,
         effectiveFeeRate, -1, -1);
     }
 
-    public static UtxoData[] SelectCoins(UtxoData[] utxoList, long txFeeAmount, long targetAmount,
+    public UtxoData[] SelectCoins(UtxoData[] utxoList, long txFeeAmount, long targetAmount,
       double effectiveFeeRate, double longTermFeeRate, long dustFeeRate, long knapsackMinChange)
     {
       if (utxoList is null)
@@ -37,12 +70,14 @@ namespace Cfd
         {
           for (uint index = 0; index < utxoList.Length; ++index)
           {
+            string desc = (utxoList[index].GetDescriptor() is null) ?
+              "" : utxoList[index].GetDescriptor().ToString();
             ret = NativeMethods.CfdAddCoinSelectionUtxo(
               handle.GetHandle(), coinSelectHandle, index,
               utxoList[index].GetOutPoint().GetTxid().ToHexString(),
               utxoList[index].GetOutPoint().GetVout(),
               utxoList[index].GetAmount(), "",
-              utxoList[index].GetDescriptor().ToString());
+              desc);
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);
@@ -64,25 +99,28 @@ namespace Cfd
 
           uint[] collectIndexes = new uint[utxoList.Length];
           uint collectCount = 0;
-          for (uint index = 0; index < utxoList.Length; ++index)
+          if ((utxoFeeAmount > 0) || (targetAmount > 0))
           {
-            ret = NativeMethods.CfdGetSelectedCoinIndex(
-              handle.GetHandle(), coinSelectHandle,
-              index, out int utxoIndex);
-            if (ret != CfdErrorCode.Success)
+            for (uint index = 0; index < utxoList.Length; ++index)
             {
-              handle.ThrowError(ret);
+              ret = NativeMethods.CfdGetSelectedCoinIndex(
+                handle.GetHandle(), coinSelectHandle,
+                index, out int utxoIndex);
+              if (ret != CfdErrorCode.Success)
+              {
+                handle.ThrowError(ret);
+              }
+              if (utxoIndex < 0)
+              {
+                break;
+              }
+              if (utxoList.Length <= utxoIndex)
+              {
+                throw new InvalidProgramException("utxoIndex maximum over.");
+              }
+              ++collectCount;
+              collectIndexes[index] = (uint)utxoIndex;
             }
-            if (utxoIndex < 0)
-            {
-              break;
-            }
-            if (utxoList.Length >= utxoIndex)
-            {
-              throw new InvalidProgramException("utxoIndex maximum over.");
-            }
-            ++collectCount;
-            collectIndexes[index] = (uint)utxoIndex;
           }
 
           /*
@@ -99,6 +137,7 @@ namespace Cfd
           {
             selectedUtxoList[index] = utxoList[collectIndexes[index]];
           }
+          lastSelectedUtxoFee = utxoFeeAmount;
           return selectedUtxoList;
         }
         finally
@@ -108,7 +147,7 @@ namespace Cfd
       }
     }
 
-    public static ElementsUtxoData[] SelectCoinsForElements(
+    public ElementsUtxoData[] SelectCoinsForElements(
       ElementsUtxoData[] utxoList,
       IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
       ConfidentialAsset feeAsset, long txFeeAmount,
@@ -118,7 +157,7 @@ namespace Cfd
         effectiveFeeRate, effectiveFeeRate, -1, -1);
     }
 
-    public static ElementsUtxoData[] SelectCoinsForElements(
+    public ElementsUtxoData[] SelectCoinsForElements(
       ElementsUtxoData[] utxoList,
       IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
       ConfidentialAsset feeAsset, long txFeeAmount,
@@ -165,17 +204,21 @@ namespace Cfd
         {
           for (uint index = 0; index < utxoList.Length; ++index)
           {
+            string desc = (utxoList[index].GetDescriptor() is null) ?
+              "" : utxoList[index].GetDescriptor().ToString();
             ret = NativeMethods.CfdAddCoinSelectionUtxo(
               handle.GetHandle(), coinSelectHandle, index,
               utxoList[index].GetOutPoint().GetTxid().ToHexString(),
               utxoList[index].GetOutPoint().GetVout(),
-              utxoList[index].GetAmount(), "",
-              utxoList[index].GetDescriptor().ToString());
+              utxoList[index].GetAmount(),
+              utxoList[index].GetAsset(),
+              desc);
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);
             }
           }
+          long targetAmountAll = 0;
           uint assetIndex = 0;
           foreach (var key in targetAssetAmountMap.Keys)
           {
@@ -187,6 +230,7 @@ namespace Cfd
               handle.ThrowError(ret);
             }
             ++assetIndex;
+            targetAmountAll += targetAssetAmountMap[key];
           }
 
           ret = NativeMethods.CfdFinalizeCoinSelection(
@@ -198,25 +242,28 @@ namespace Cfd
 
           uint[] collectIndexes = new uint[utxoList.Length];
           uint collectCount = 0;
-          for (uint index = 0; index < utxoList.Length; ++index)
+          if ((utxoFeeAmount > 0) || (targetAmountAll > 0))
           {
-            ret = NativeMethods.CfdGetSelectedCoinIndex(
-              handle.GetHandle(), coinSelectHandle,
-              index, out int utxoIndex);
-            if (ret != CfdErrorCode.Success)
+            for (uint index = 0; index < utxoList.Length; ++index)
             {
-              handle.ThrowError(ret);
+              ret = NativeMethods.CfdGetSelectedCoinIndex(
+                handle.GetHandle(), coinSelectHandle,
+                index, out int utxoIndex);
+              if (ret != CfdErrorCode.Success)
+              {
+                handle.ThrowError(ret);
+              }
+              if (utxoIndex < 0)
+              {
+                break;
+              }
+              if (utxoList.Length <= utxoIndex)
+              {
+                throw new InvalidProgramException("utxoIndex maximum over.");
+              }
+              ++collectCount;
+              collectIndexes[index] = (uint)utxoIndex;
             }
-            if (utxoIndex < 0)
-            {
-              break;
-            }
-            if (utxoList.Length >= utxoIndex)
-            {
-              throw new InvalidProgramException("utxoIndex maximum over.");
-            }
-            ++collectCount;
-            collectIndexes[index] = (uint)utxoIndex;
           }
           /*
           assetIndex = 0;
@@ -240,6 +287,7 @@ namespace Cfd
           {
             selectedUtxoList[index] = utxoList[collectIndexes[index]];
           }
+          lastSelectedUtxoFee = utxoFeeAmount;
           return selectedUtxoList;
         }
         finally
@@ -247,6 +295,11 @@ namespace Cfd
           NativeMethods.CfdFreeCoinSelectionHandle(handle.GetHandle(), coinSelectHandle);
         }
       }
+    }
+
+    public long GetLastSelectedUtxoFee()
+    {
+      return lastSelectedUtxoFee;
     }
   }
 }

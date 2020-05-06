@@ -79,6 +79,10 @@ namespace Cfd
       }
       this.asset = asset;
       this.value = value;
+      if (!asset.HasBlinding())
+      {
+        unblindedAsset = asset.ToHexString();
+      }
     }
 
     public ElementsUtxoData(OutPoint outpoint, string asset,

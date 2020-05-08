@@ -622,14 +622,14 @@ namespace Cfd
         [In] string directLockingScript,
         [In] long satoshi,
         [In] string valueCommitment);
-    /*
-      [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
-      internal static extern CfdErrorCode CfdGetConfidentialValueHex(
-          [In] IntPtr handle,
-          [In] long valueSatoshi,
-          [In] bool ignoreVersionInfo,
-          [Out] out IntPtr valueHex);
-     */
+
+
+    [DllImport("cfd", CallingConvention = CallingConvention.StdCall)]
+    internal static extern CfdErrorCode CfdGetConfidentialValueHex(
+        [In] IntPtr handle,
+        [In] long valueSatoshi,
+        [In] bool ignoreVersionInfo,
+        [Out] out IntPtr valueHex);
 
     // Key
     [DllImport("cfd", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]

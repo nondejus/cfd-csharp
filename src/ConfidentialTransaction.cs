@@ -506,6 +506,7 @@ namespace Cfd
     private uint txWeight;
     private uint txVersion;
     private uint txLocktime;
+    private long lastTxFee;
 
     /// <summary>
     /// Convert tx to decoderawtransaction json string.
@@ -585,19 +586,19 @@ namespace Cfd
     /// <param name="locktime">transaction locktime</param>
     public ConfidentialTransaction(uint version, uint locktime)
     {
-      using (var handle = new ErrorHandle())
-      {
-        var ret = NativeMethods.CfdInitializeConfidentialTx(
-          handle.GetHandle(),
-          version,
-          locktime,
-          out IntPtr txString);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        tx = CCommon.ConvertToString(txString);
-      }
+      tx = CreateTransaction(version, locktime, "", null, null);
+    }
+
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="version">transaction version</param>
+    /// <param name="locktime">transaction locktime</param>
+    /// <param name="txinList">transaction input array</param>
+    /// <param name="txoutList">transaction output array</param>
+    public ConfidentialTransaction(uint version, uint locktime, ConfidentialTxIn[] txinList, ConfidentialTxOut[] txoutList)
+    {
+      tx = CreateTransaction(version, locktime, "", txinList, txoutList);
     }
 
     /// <summary>
@@ -619,6 +620,86 @@ namespace Cfd
     }
 
     /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="txHex">transaction hex</param>
+    /// <param name="txinList">transaction input array</param>
+    /// <param name="txoutList">transaction output array</param>
+    public ConfidentialTransaction(string txHex, ConfidentialTxIn[] txinList, ConfidentialTxOut[] txoutList)
+    {
+      tx = CreateTransaction(0, 0, txHex, txinList, txoutList);
+    }
+
+    /// <summary>
+    /// Constructor.
+    /// </summary>
+    /// <param name="txBytes">transaction byte array</param>
+    /// <param name="txinList">transaction input array</param>
+    /// <param name="txoutList">transaction output array</param>
+    public ConfidentialTransaction(byte[] txBytes, ConfidentialTxIn[] txinList, ConfidentialTxOut[] txoutList)
+    {
+      tx = CreateTransaction(0, 0, StringUtil.FromBytes(txBytes), txinList, txoutList);
+    }
+
+    /// <summary>
+    /// Create Transaction.
+    /// </summary>
+    private static string CreateTransaction(uint version, uint locktime, string txHex,
+      ConfidentialTxIn[] txinList, ConfidentialTxOut[] txoutList)
+    {
+      using (var handle = new ErrorHandle())
+      {
+        var ret = NativeMethods.CfdInitializeTransaction(
+          handle.GetHandle(), defaultNetType,
+          version, locktime, txHex, out IntPtr txHandle);
+        if (ret != CfdErrorCode.Success)
+        {
+          handle.ThrowError(ret);
+        }
+        try
+        {
+          if ((!(txinList is null)) && (txinList.Length > 0))
+          {
+            foreach (var txin in txinList)
+            {
+              ret = NativeMethods.CfdAddTransactionInput(
+                handle.GetHandle(), txHandle, txin.OutPoint.GetTxid().ToHexString(),
+                txin.OutPoint.GetVout(), txin.Sequence);
+              if (ret != CfdErrorCode.Success)
+              {
+                handle.ThrowError(ret);
+              }
+            }
+          }
+          if ((!(txoutList is null)) && (txoutList.Length > 0))
+          {
+            foreach (var txout in txoutList)
+            {
+              ret = NativeMethods.CfdAddTransactionOutput(
+                handle.GetHandle(), txHandle, txout.Value.GetSatoshiValue(),
+                "", txout.ScriptPubkey.ToHexString(), txout.Asset.ToHexString());
+              if (ret != CfdErrorCode.Success)
+              {
+                handle.ThrowError(ret);
+              }
+            }
+          }
+          ret = NativeMethods.CfdFinalizeTransaction(
+            handle.GetHandle(), txHandle, out IntPtr txString);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+          return CCommon.ConvertToString(txString);
+        }
+        finally
+        {
+          NativeMethods.CfdFreeTransactionHandle(handle.GetHandle(), txHandle);
+        }
+      }
+    }
+
+    /// <summary>
     /// Add transction input.
     /// </summary>
     /// <param name="txid">utxo txid.</param>
@@ -636,20 +717,7 @@ namespace Cfd
     /// <param name="sequence">sequence number. (default: 0xffffffff)</param>
     public void AddTxIn(Txid txid, uint vout, uint sequence)
     {
-      if (txid is null)
-      {
-        throw new ArgumentNullException(nameof(txid));
-      }
-      using (var handle = new ErrorHandle())
-      {
-        var ret = NativeMethods.CfdAddConfidentialTxIn(
-          handle.GetHandle(), tx, txid.ToHexString(), vout, sequence, out IntPtr txString);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        tx = CCommon.ConvertToString(txString);
-      }
+      AddTxIn(new OutPoint(txid, vout), sequence);
     }
 
     /// <summary>
@@ -672,17 +740,14 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(outpoint));
       }
-      using (var handle = new ErrorHandle())
-      {
-        var ret = NativeMethods.CfdAddConfidentialTxIn(
-          handle.GetHandle(), tx, outpoint.GetTxid().ToHexString(), outpoint.GetVout(),
-          sequence, out IntPtr txString);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        tx = CCommon.ConvertToString(txString);
-      }
+      AddTxInList(new[] {
+        new ConfidentialTxIn(outpoint, sequence),
+      });
+    }
+
+    public void AddTxInList(ConfidentialTxIn[] txinList)
+    {
+      tx = CreateTransaction(0, 0, tx, txinList, null);
     }
 
     /// <summary>
@@ -693,27 +758,29 @@ namespace Cfd
     /// <param name="address">txout address.</param>
     public void AddTxOut(string asset, long satoshiValue, Address address)
     {
-      if (address is null)
-      {
-        throw new ArgumentNullException(nameof(address));
-      }
-      using (var handle = new ErrorHandle())
-      {
-        var ret = NativeMethods.CfdAddConfidentialTxOut(
-            handle.GetHandle(), tx,
-            asset,
-            satoshiValue,
-            "",
-            address.ToAddressString(),
-            "",
-            "",
-            out IntPtr txString);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        tx = CCommon.ConvertToString(txString);
-      }
+      AddTxOut(new ConfidentialAsset(asset), new ConfidentialValue(satoshiValue), address, null);
+    }
+
+    /// <summary>
+    /// Add transction output.
+    /// </summary>
+    /// <param name="asset">txout asset.</param>
+    /// <param name="satoshiValue">txout satoshi value.</param>
+    /// <param name="address">txout confidential address.</param>
+    public void AddTxOut(string asset, long satoshiValue, ConfidentialAddress address)
+    {
+      AddTxOut(new ConfidentialAsset(asset), new ConfidentialValue(satoshiValue), address);
+    }
+
+    /// <summary>
+    /// Add transction output.
+    /// </summary>
+    /// <param name="asset">txout asset.</param>
+    /// <param name="satoshiValue">txout satoshi value.</param>
+    /// <param name="address">txout address.</param>
+    public void AddTxOut(ConfidentialAsset asset, long satoshiValue, Address address)
+    {
+      AddTxOut(asset, new ConfidentialValue(satoshiValue), address, null);
     }
 
     /// <summary>
@@ -724,6 +791,44 @@ namespace Cfd
     /// <param name="address">txout address.</param>
     public void AddTxOut(string asset, ConfidentialValue valueCommitment, Address address)
     {
+      AddTxOut(new ConfidentialAsset(asset), valueCommitment, address, null);
+    }
+
+    /// <summary>
+    /// Add transction output.
+    /// </summary>
+    /// <param name="asset">txout asset.</param>
+    /// <param name="valueCommitment">txout commitment value.</param>
+    /// <param name="address">txout address.</param>
+    public void AddTxOut(ConfidentialAsset asset, ConfidentialValue valueCommitment, Address address)
+    {
+      AddTxOut(asset, valueCommitment, address, null);
+    }
+
+    /// <summary>
+    /// Add transction output.
+    /// </summary>
+    /// <param name="asset">txout asset.</param>
+    /// <param name="valueCommitment">txout commitment value.</param>
+    /// <param name="address">txout confidential address.</param>
+    public void AddTxOut(ConfidentialAsset asset, ConfidentialValue valueCommitment, ConfidentialAddress address)
+    {
+      if (address is null)
+      {
+        throw new ArgumentNullException(nameof(address));
+      }
+      AddTxOut(asset, valueCommitment, address.GetAddress(), address.GetConfidentialKey().GetData());
+    }
+
+    /// <summary>
+    /// Add transction output.
+    /// </summary>
+    /// <param name="asset">txout asset.</param>
+    /// <param name="valueCommitment">txout commitment value.</param>
+    /// <param name="address">txout address.</param>
+    /// <param name="nonce">txout nonce.</param>
+    public void AddTxOut(ConfidentialAsset asset, ConfidentialValue valueCommitment, Address address, ByteData nonce)
+    {
       if (valueCommitment is null)
       {
         throw new ArgumentNullException(nameof(valueCommitment));
@@ -732,16 +837,20 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(address));
       }
+      if (asset is null)
+      {
+        throw new ArgumentNullException(nameof(asset));
+      }
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdAddConfidentialTxOut(
             handle.GetHandle(), tx,
-            asset,
-            (long)0,
-            valueCommitment.ToHexString(),
+            asset.ToHexString(),
+            (valueCommitment.HasBlinding()) ? 0 : valueCommitment.GetSatoshiValue(),
+            (valueCommitment.HasBlinding()) ? valueCommitment.ToHexString() : "",
             address.ToAddressString(),
             "",
-            "",
+            (nonce is null) ? "" : nonce.ToHexString(),
             out IntPtr txString);
         if (ret != CfdErrorCode.Success)
         {
@@ -751,46 +860,28 @@ namespace Cfd
       }
     }
 
-    public void AddFeeTxOut(long satoshiValue)
+    public void AddFeeTxOut(string asset, long satoshiValue)
     {
-      using (var handle = new ErrorHandle())
+      if (asset is null)
       {
-        var ret = NativeMethods.CfdAddConfidentialTxOut(
-            handle.GetHandle(), tx,
-            "",
-            satoshiValue,
-            "",
-            "",
-            "",
-            "",
-            out IntPtr txString);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        tx = CCommon.ConvertToString(txString);
+        throw new ArgumentNullException(nameof(asset));
       }
+      AddTxOutList(new[] { new ConfidentialTxOut(new ConfidentialAsset(asset), satoshiValue) });
     }
 
     public void AddDestroyAmountTxOut(string asset, long satoshiValue)
     {
-      using (var handle = new ErrorHandle())
+      if (asset is null)
       {
-        var ret = NativeMethods.CfdAddConfidentialTxOut(
-            handle.GetHandle(), tx,
-            asset,
-            satoshiValue,
-            "",
-            "",
-            "6a",  // OP_RETURN
-            "",
-            out IntPtr txString);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        tx = CCommon.ConvertToString(txString);
+        throw new ArgumentNullException(nameof(asset));
       }
+      AddTxOutList(new[] { new ConfidentialTxOut(new ConfidentialAsset(asset),
+        new ConfidentialValue(satoshiValue), new Script("6a")) });
+    }
+
+    public void AddTxOutList(ConfidentialTxOut[] txoutList)
+    {
+      tx = CreateTransaction(0, 0, tx, null, txoutList);
     }
 
     /// <summary>
@@ -875,6 +966,14 @@ namespace Cfd
             }
           }
 
+          ret = NativeMethods.CfdSetBlindTxOption(
+            handle.GetHandle(), blindHandle, (int)CfdBlindOption.MinimumBits,
+            52);
+          if (ret != CfdErrorCode.Success)
+          {
+            handle.ThrowError(ret);
+          }
+
           ret = NativeMethods.CfdFinalizeBlindTx(
             handle.GetHandle(), blindHandle, tx,
             out IntPtr txHexString);
@@ -891,7 +990,7 @@ namespace Cfd
       }
     }
 
-    public void BlindTransaction(IDictionary<OutPoint, AssetValueData> utxos,
+    public void BlindTransaction(ElementsUtxoData[] utxos,
         IDictionary<OutPoint, IssuanceKeys> issuanceKeys,
         ConfidentialAddress[] confidentialAddresses)
     {
@@ -899,7 +998,7 @@ namespace Cfd
         new CfdBlindOptionData(1, 0, 52));
     }
 
-    public void BlindTransaction(IDictionary<OutPoint, AssetValueData> utxos,
+    public void BlindTransaction(ElementsUtxoData[] utxos,
         IDictionary<OutPoint, IssuanceKeys> issuanceKeys,
         ConfidentialAddress[] confidentialAddresses, CfdBlindOptionData option)
     {
@@ -947,9 +1046,9 @@ namespace Cfd
             handle.ThrowError(ret);
           }
 
-          foreach (var outpoint in utxos.Keys)
+          foreach (var utxo in utxos)
           {
-            var data = utxos[outpoint];
+            var outpoint = utxo.GetOutPoint();
             string assetKey = "";
             string tokenKey = "";
             if (issuanceKeys.ContainsKey(outpoint))
@@ -962,10 +1061,10 @@ namespace Cfd
             ret = NativeMethods.CfdAddBlindTxInData(
               handle.GetHandle(), blindHandle,
               outpoint.GetTxid().ToHexString(), outpoint.GetVout(),
-              data.Asset,
-              data.AssetBlindFactor.ToHexString(),
-              data.AmountBlindFactor.ToHexString(),
-              data.SatoshiValue,
+              utxo.GetAsset(),
+              utxo.GetAssetBlindFactor().ToHexString(),
+              utxo.GetAmountBlindFactor().ToHexString(),
+              utxo.GetAmount(),
               assetKey,
               tokenKey);
             if (ret != CfdErrorCode.Success)
@@ -1293,6 +1392,15 @@ namespace Cfd
       }
     }
 
+    /// <summary>
+    /// Get transaction output fee index.
+    /// </summary>
+    /// <returns>transaction output index.</returns>
+    public uint GetTxOutFeeIndex()
+    {
+      return GetTxOutIndex(new Script(""));
+    }
+
     public ByteData GetSignatureHash(OutPoint outpoint, CfdHashType hashType,
         Pubkey pubkey, ConfidentialValue value, SignatureHashType sighashType)
     {
@@ -1324,7 +1432,7 @@ namespace Cfd
             handle.GetHandle(), tx, txid.ToHexString(), vout, (int)hashType,
             pubkey.ToHexString(), "",
             value.GetSatoshiValue(),
-            (value.IsEmpty()) ? "" : value.ToHexString(),
+            (value.HasBlinding()) ? value.ToHexString() : "",
             (int)sighashType.SighashType,
             sighashType.IsSighashAnyoneCanPay,
             out IntPtr sighash);
@@ -1367,7 +1475,7 @@ namespace Cfd
             handle.GetHandle(), tx, txid.ToHexString(), vout, (int)hashType,
             "", redeemScript.ToHexString(),
             value.GetSatoshiValue(),
-            (value.IsEmpty()) ? "" : value.ToHexString(),
+            (value.HasBlinding()) ? value.ToHexString() : "",
             (int)sighashType.SighashType,
             sighashType.IsSighashAnyoneCanPay,
             out IntPtr sighash);
@@ -1448,7 +1556,7 @@ namespace Cfd
             pubkey.ToHexString(),
             (privkey.ToHexString().Length > 0) ? privkey.ToHexString() : privkey.GetWif(),
             value.GetSatoshiValue(),
-            (value.IsEmpty()) ? "" : value.ToHexString(),
+            (value.HasBlinding()) ? value.ToHexString() : "",
             (int)sighashType.SighashType,
             sighashType.IsSighashAnyoneCanPay,
             hasGrindR, out IntPtr txString);
@@ -1661,13 +1769,13 @@ namespace Cfd
       }
     }
 
-    public void VerifySign(OutPoint outpoint, Address address, CfdAddressType addressType, ConfidentialValue value)
+    public bool VerifySign(OutPoint outpoint, Address address, CfdAddressType addressType, ConfidentialValue value)
     {
       if (outpoint is null)
       {
         throw new ArgumentNullException(nameof(outpoint));
       }
-      VerifySign(outpoint.GetTxid(), outpoint.GetVout(), address, addressType, value);
+      return VerifySign(outpoint.GetTxid(), outpoint.GetVout(), address, addressType, value);
     }
 
     public bool VerifySign(Txid txid, uint vout, Address address, CfdAddressType addressType, ConfidentialValue value)
@@ -1690,7 +1798,7 @@ namespace Cfd
             handle.GetHandle(), tx, txid.ToHexString(), vout,
             address.ToAddressString(), (int)addressType, "",
             value.GetSatoshiValue(),
-            (value.IsEmpty()) ? "" : value.ToHexString());
+            (value.HasBlinding()) ? value.ToHexString() : "");
         if (ret == CfdErrorCode.Success)
         {
           return true;
@@ -1722,20 +1830,26 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(value));
       }
+      ByteData sig = signature;
+      if (signature.GetSize() > 65)
+      {
+        // decode der
+        sig = SignParameter.DecodeFromDer(sig).GetData();
+      }
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdVerifyConfidentialTxSignature(
-            handle.GetHandle(), tx, signature.ToHexString(), pubkey.ToHexString(), "",
+            handle.GetHandle(), tx, sig.ToHexString(), pubkey.ToHexString(), "",
             txid.ToHexString(), vout,
             (int)sighashType.SighashType, sighashType.IsSighashAnyoneCanPay,
             value.GetSatoshiValue(),
-            (value.IsEmpty()) ? "" : value.ToHexString(),
+            (value.HasBlinding()) ? value.ToHexString() : "",
             (int)((hashType == CfdHashType.P2pkh) ? CfdWitnessVersion.VersionNone : CfdWitnessVersion.Version0));
         if (ret == CfdErrorCode.Success)
         {
           return true;
         }
-        else if (ret != CfdErrorCode.Success)
+        else if (ret != CfdErrorCode.SignVerificationError)
         {
           handle.ThrowError(ret);
         }
@@ -1743,8 +1857,8 @@ namespace Cfd
       return false;
     }
 
-    public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType,
-        ByteData signature, Script redeemScript, SignatureHashType sighashType, ConfidentialValue value)
+    public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType, ByteData signature,
+      Pubkey pubkey, Script redeemScript, SignatureHashType sighashType, ConfidentialValue value)
     {
       if (txid is null)
       {
@@ -1758,24 +1872,35 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(signature));
       }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
       if (redeemScript is null)
       {
         throw new ArgumentNullException(nameof(redeemScript));
       }
+      ByteData sig = signature;
+      if (signature.GetSize() > 65)
+      {
+        // decode der
+        sig = SignParameter.DecodeFromDer(sig).GetData();
+      }
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdVerifyConfidentialTxSignature(
-            handle.GetHandle(), tx, signature.ToHexString(), "", redeemScript.ToHexString(),
+            handle.GetHandle(), tx, sig.ToHexString(),
+            pubkey.ToHexString(), redeemScript.ToHexString(),
             txid.ToHexString(), vout,
             (int)sighashType.SighashType, sighashType.IsSighashAnyoneCanPay,
             value.GetSatoshiValue(),
-            (value.IsEmpty()) ? "" : value.ToHexString(),
+            (value.HasBlinding()) ? value.ToHexString() : "",
             (int)((hashType == CfdHashType.P2sh) ? CfdWitnessVersion.VersionNone : CfdWitnessVersion.Version0));
         if (ret == CfdErrorCode.Success)
         {
           return true;
         }
-        else if (ret != CfdErrorCode.Success)
+        else if (ret != CfdErrorCode.SignVerificationError)
         {
           handle.ThrowError(ret);
         }
@@ -1932,23 +2057,20 @@ namespace Cfd
       ElementsUtxoData[] txinList, ElementsUtxoData[] utxoList,
       IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
       IDictionary<ConfidentialAsset, string> reservedAddressMap,
-      double effectiveFeeRate)
+      ConfidentialAsset feeAsset, double effectiveFeeRate)
     {
       return FundRawTransaction(txinList, utxoList, targetAssetAmountMap,
-        reservedAddressMap, true, effectiveFeeRate, effectiveFeeRate, -1, -1);
+        reservedAddressMap, feeAsset, true, effectiveFeeRate, effectiveFeeRate, -1, -1);
     }
 
     public string[] FundRawTransaction(
       ElementsUtxoData[] txinList, ElementsUtxoData[] utxoList,
       IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
       IDictionary<ConfidentialAsset, string> reservedAddressMap,
+      ConfidentialAsset feeAsset,
       bool isBlind, double effectiveFeeRate, double longTermFeeRate,
       long dustFeeRate, long knapsackMinChange)
     {
-      if (txinList is null)
-      {
-        throw new ArgumentNullException(nameof(txinList));
-      }
       if (utxoList is null)
       {
         throw new ArgumentNullException(nameof(utxoList));
@@ -1961,29 +2083,37 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(reservedAddressMap));
       }
+      if (feeAsset is null)
+      {
+        throw new ArgumentNullException(nameof(feeAsset));
+      }
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdInitializeFundRawTx(
-          handle.GetHandle(), defaultNetType, 1, "", out IntPtr fundHandle);
+          handle.GetHandle(), defaultNetType, (uint)targetAssetAmountMap.Keys.Count,
+          feeAsset.ToHexString(), out IntPtr fundHandle);
         if (ret != CfdErrorCode.Success)
         {
           handle.ThrowError(ret);
         }
         try
         {
-          foreach (var txin in txinList)
+          if (txinList != null)
           {
-            ret = NativeMethods.CfdAddTxInForFundRawTx(
-              handle.GetHandle(), fundHandle,
-              txin.GetOutPoint().GetTxid().ToHexString(),
-              txin.GetOutPoint().GetVout(),
-              txin.GetAmount(), txin.GetDescriptor().ToString(),
-              txin.GetAsset(), txin.IsIssuance(), txin.IsBlindIssuance(),
-              txin.IsPegin(), txin.GetPeginBtcTxSize(),
-              (txin.GetFedpegScript() is null) ? "" : txin.GetFedpegScript().ToHexString());
-            if (ret != CfdErrorCode.Success)
+            foreach (var txin in txinList)
             {
-              handle.ThrowError(ret);
+              ret = NativeMethods.CfdAddTxInForFundRawTx(
+                handle.GetHandle(), fundHandle,
+                txin.GetOutPoint().GetTxid().ToHexString(),
+                txin.GetOutPoint().GetVout(),
+                txin.GetAmount(), txin.GetDescriptor().ToString(),
+                txin.GetAsset(), txin.IsIssuance(), txin.IsBlindIssuance(),
+                txin.IsPegin(), txin.GetPeginBtcTxSize(),
+                (txin.GetFedpegScript() is null) ? "" : txin.GetFedpegScript().ToHexString());
+              if (ret != CfdErrorCode.Success)
+              {
+                handle.ThrowError(ret);
+              }
             }
           }
 
@@ -2054,11 +2184,6 @@ namespace Cfd
             handle.ThrowError(ret);
           }
           string fundTx = CCommon.ConvertToString(outputTxHex);
-          if (appendTxOutCount > 1)
-          {
-            throw new InvalidProgramException("Invalid txout append count.");
-          }
-
           string[] usedReserveAddressList = new string[appendTxOutCount];
           for (uint index = 0; index < appendTxOutCount; ++index)
           {
@@ -2072,6 +2197,7 @@ namespace Cfd
           }
 
           tx = fundTx;
+          lastTxFee = txFee;
           return usedReserveAddressList;
         }
         finally
@@ -2137,6 +2263,21 @@ namespace Cfd
     {
       UpdateTxInfoCache();
       return txLocktime;
+    }
+
+    public long GetLastTxFee()
+    {
+      return lastTxFee;
+    }
+
+    public static Privkey GetIssuanceBlindingKey(
+        Privkey masterBlindingKey, OutPoint outpoint)
+    {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      return GetIssuanceBlindingKey(masterBlindingKey, outpoint.GetTxid(), outpoint.GetVout());
     }
 
     public static Privkey GetIssuanceBlindingKey(
@@ -2228,9 +2369,9 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < witnessCount; ++witnessIndex)
       {
-#pragma warning disable IDE0059 // 値の不必要な代入
+#pragma warning disable IDE0059 // Unnecessary value assignment
         IntPtr stackData = IntPtr.Zero;
-#pragma warning restore IDE0059 // 値の不必要な代入
+#pragma warning restore IDE0059 // Unnecessary value assignment
         ret = NativeMethods.CfdGetConfidentialTxInWitness(
             handle.GetHandle(), tx, index, witnessIndex,
             out stackData);
@@ -2278,9 +2419,9 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < peginCount; ++witnessIndex)
       {
-#pragma warning disable IDE0059 // 値の不必要な代入
+#pragma warning disable IDE0059 // Unnecessary value assignment
         IntPtr stackData = IntPtr.Zero;
-#pragma warning restore IDE0059 // 値の不必要な代入
+#pragma warning restore IDE0059 // Unnecessary value assignment
         ret = NativeMethods.CfdGetConfidentialTxInPeginWitness(
             handle.GetHandle(), tx, index, witnessIndex,
             out stackData);

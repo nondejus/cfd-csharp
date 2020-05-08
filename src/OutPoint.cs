@@ -15,6 +15,7 @@ namespace Cfd
     /// </summary>
     public OutPoint()
     {
+      txid = new Txid();
     }
 
     public OutPoint(string txid, uint vout)
@@ -31,6 +32,10 @@ namespace Cfd
 
     public OutPoint(Txid txid, uint vout)
     {
+      if (txid is null)
+      {
+        throw new ArgumentNullException(nameof(txid));
+      }
       this.txid = txid;
       this.vout = vout;
     }
@@ -51,7 +56,7 @@ namespace Cfd
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, other))
+      if (ReferenceEquals(this, other))
       {
         return true;
       }

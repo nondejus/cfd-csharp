@@ -152,6 +152,11 @@ namespace Cfd
       return StringUtil.ToBytes(data);
     }
 
+    public ByteData GetData()
+    {
+      return new ByteData(data);
+    }
+
     public bool IsDerEncode()
     {
       return isSetDerEncode;

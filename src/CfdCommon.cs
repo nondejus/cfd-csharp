@@ -45,10 +45,10 @@ namespace Cfd
     /// </summary>
     /// <param name="errorCode">error code</param>
     /// <param name="message">error message</param>
-    /// <exception cref="System.ArgumentOutOfRangeException">argument range exception</exception>
-    /// <exception cref="System.ArgumentException">argument exception</exception>
-    /// <exception cref="System.InsufficientMemoryException">memory full exception</exception>
-    /// <exception cref="System.InvalidOperationException">illegal exception</exception>
+    /// <exception cref="ArgumentOutOfRangeException">argument range exception</exception>
+    /// <exception cref="ArgumentException">argument exception</exception>
+    /// <exception cref="InsufficientMemoryException">memory full exception</exception>
+    /// <exception cref="InvalidOperationException">illegal exception</exception>
     public static void ThrowError(CfdErrorCode errorCode, string message)
     {
       if (errorCode == CfdErrorCode.Success)

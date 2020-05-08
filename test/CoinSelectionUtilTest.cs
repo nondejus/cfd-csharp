@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -31,23 +30,23 @@ namespace Cfd.xTests
 
     static UtxoData[] GetBitcoinBnbUtxoList(CfdNetworkType netType)
     {
+      string desc = "sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x";
       UtxoData[] utxos = new[] {
         new UtxoData(new OutPoint("7ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a", 0), 155062500,
-          new Descriptor("sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x", netType)),
+          new Descriptor(desc, netType)),
         new UtxoData(new OutPoint("30f71f39d210f7ee291b0969c6935debf11395b0935dca84d30c810a75339a0a", 0), 85062500,
-          new Descriptor("sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x", netType)),
+          new Descriptor(desc, netType)),
         new UtxoData(new OutPoint("9e1ead91c432889cb478237da974dd1e9009c9e22694fd1e3999c40a1ef59b0a", 0), 39062500,
-          new Descriptor("sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x", netType)),
+          new Descriptor(desc, netType)),
         new UtxoData(new OutPoint("8f4af7ee42e62a3d32f25ca56f618fb2f5df3d4c3a9c59e2c3646c5535a3d40a", 0), 61062500,
-          new Descriptor("sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x", netType)),
+          new Descriptor(desc, netType)),
         new UtxoData(new OutPoint("4d97d0119b90421818bff4ec9033e5199199b53358f56390cb20f8148e76f40a", 0), 15675000,
-          new Descriptor("sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x", netType)),
+          new Descriptor(desc, netType)),
         new UtxoData(new OutPoint("b9720ed2265a4ced42425bffdb4ef90a473b4106811a802fce53f7c57487fa0b", 0), 14938590,
-          new Descriptor("sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x", netType)),
+          new Descriptor(desc, netType)),
       };
       return utxos;
     }
-
 
     [Fact]
     public void SelectCoinsTest01()

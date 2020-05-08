@@ -54,7 +54,7 @@ namespace Cfd
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, other))
+      if (ReferenceEquals(this, other))
       {
         return true;
       }

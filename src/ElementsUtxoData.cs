@@ -15,6 +15,8 @@ namespace Cfd
     private readonly bool isPegin;
     private readonly uint peginBtcTxSize;
     private readonly Script fedpegScript;
+    private readonly BlindFactor assetBlindFactor;
+    private readonly BlindFactor amountBlindFactor;
 
     /// <summary>
     /// Constructor. (empty)
@@ -26,10 +28,14 @@ namespace Cfd
 
     public ElementsUtxoData(OutPoint outpoint) : base(outpoint)
     {
+      assetBlindFactor = new BlindFactor();
+      amountBlindFactor = new BlindFactor();
     }
 
     public ElementsUtxoData(OutPoint outpoint, Descriptor descriptor) : base(outpoint, descriptor)
     {
+      assetBlindFactor = new BlindFactor();
+      amountBlindFactor = new BlindFactor();
     }
 
     public ElementsUtxoData(OutPoint outpoint, ConfidentialAsset asset, long amount) : base(outpoint, amount)
@@ -45,6 +51,8 @@ namespace Cfd
       this.asset = asset;
       unblindedAsset = asset.ToHexString();
       value = new ConfidentialValue(amount);
+      assetBlindFactor = new BlindFactor();
+      amountBlindFactor = new BlindFactor();
     }
 
     public ElementsUtxoData(OutPoint outpoint, ConfidentialAsset asset, ConfidentialValue value)
@@ -64,6 +72,8 @@ namespace Cfd
       {
         unblindedAsset = asset.ToHexString();
       }
+      assetBlindFactor = new BlindFactor();
+      amountBlindFactor = new BlindFactor();
     }
 
     public ElementsUtxoData(OutPoint outpoint, ConfidentialAsset asset, ConfidentialValue value, Descriptor descriptor)
@@ -87,6 +97,14 @@ namespace Cfd
 
     public ElementsUtxoData(OutPoint outpoint, string asset,
         long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, null, null)
+    {
+      // do nothing
+    }
+
+    public ElementsUtxoData(OutPoint outpoint, string asset,
+        long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
+        BlindFactor assetBlinder, BlindFactor amountBlinder)
           : base(outpoint, amount)
     {
       if (asset is null)
@@ -104,11 +122,21 @@ namespace Cfd
       unblindedAsset = asset;
       this.asset = assetCommitment;
       value = valueCommitment;
+      assetBlindFactor = (assetBlinder is null) ? new BlindFactor() : assetBlinder;
+      amountBlindFactor = (amountBlinder is null) ? new BlindFactor() : amountBlinder;
     }
 
     public ElementsUtxoData(OutPoint outpoint, string asset,
         long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
         Descriptor descriptor)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor, null, null)
+    {
+      // do nothing
+    }
+
+    public ElementsUtxoData(OutPoint outpoint, string asset,
+        long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
+        Descriptor descriptor, BlindFactor assetBlinder, BlindFactor amountBlinder)
           : base(outpoint, amount, descriptor)
     {
       if (asset is null)
@@ -126,12 +154,22 @@ namespace Cfd
       unblindedAsset = asset;
       this.asset = assetCommitment;
       value = valueCommitment;
+      assetBlindFactor = (assetBlinder is null) ? new BlindFactor() : assetBlinder;
+      amountBlindFactor = (amountBlinder is null) ? new BlindFactor() : amountBlinder;
     }
 
     public ElementsUtxoData(OutPoint outpoint, string asset,
         long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
         Descriptor descriptor, bool isBlindIssuance)
-          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor, isBlindIssuance, null, null)
+    {
+      // do nothing
+    }
+
+    public ElementsUtxoData(OutPoint outpoint, string asset,
+        long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
+        Descriptor descriptor, bool isBlindIssuance, BlindFactor assetBlinder, BlindFactor amountBlinder)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor, assetBlinder, amountBlinder)
     {
       isIssuance = true;
       this.isBlindIssuance = isBlindIssuance;
@@ -140,7 +178,15 @@ namespace Cfd
     public ElementsUtxoData(OutPoint outpoint, string asset,
         long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
         Descriptor descriptor, uint peginBtcTxSize, Script fedpegScript)
-          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor, peginBtcTxSize, fedpegScript, null, null)
+    {
+      // do nothing
+    }
+
+    public ElementsUtxoData(OutPoint outpoint, string asset,
+        long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
+        Descriptor descriptor, uint peginBtcTxSize, Script fedpegScript, BlindFactor assetBlinder, BlindFactor amountBlinder)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor, assetBlinder, amountBlinder)
     {
       if (fedpegScript is null)
       {
@@ -191,13 +237,23 @@ namespace Cfd
       return fedpegScript;
     }
 
+    public BlindFactor GetAssetBlindFactor()
+    {
+      return assetBlindFactor;
+    }
+
+    public BlindFactor GetAmountBlindFactor()
+    {
+      return amountBlindFactor;
+    }
+
     public bool Equals(ElementsUtxoData other)
     {
       if (other is null)
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, other))
+      if (ReferenceEquals(this, other))
       {
         return true;
       }

@@ -28,17 +28,17 @@ namespace Cfd
   public struct FeeData : IEquatable<FeeData>
   {
     public long TxFee { get; }
-    public long UtxoFee { get; }
+    public long InputFee { get; }
 
-    public FeeData(long txFee, long utxoFee)
+    public FeeData(long txFee, long inputFee)
     {
       TxFee = txFee;
-      UtxoFee = utxoFee;
+      InputFee = inputFee;
     }
 
     public bool Equals(FeeData other)
     {
-      return (TxFee == other.TxFee) && (UtxoFee == other.UtxoFee);
+      return (TxFee == other.TxFee) && (InputFee == other.InputFee);
     }
 
     public override bool Equals(object obj)
@@ -56,7 +56,7 @@ namespace Cfd
 
     public override int GetHashCode()
     {
-      return TxFee.GetHashCode() + UtxoFee.GetHashCode();
+      return TxFee.GetHashCode() + InputFee.GetHashCode();
     }
 
     public static bool operator ==(FeeData left, FeeData right)
@@ -339,6 +339,7 @@ namespace Cfd
     private uint txWeight;
     private uint txVersion;
     private uint txLocktime;
+    private long lastTxFee;
 
     /// <summary>
     /// Convert tx to decoderawtransaction json string.
@@ -346,7 +347,7 @@ namespace Cfd
     /// <param name="tx">transaction object.</param>
     /// <returns>json string</returns>
     public static string DecodeRawTransaction(
-        ConfidentialTransaction tx)
+        Transaction tx)
     {
       return DecodeRawTransaction(tx, CfdNetworkType.Mainnet);
     }
@@ -358,7 +359,7 @@ namespace Cfd
     /// <param name="network">network type.</param>
     /// <returns>json string</returns>
     public static string DecodeRawTransaction(
-        ConfidentialTransaction tx,
+        Transaction tx,
         CfdNetworkType network)
     {
       if (tx is null)
@@ -471,7 +472,7 @@ namespace Cfd
         {
           if ((!(txinList is null)) && (txinList.Length > 0))
           {
-            foreach (TxIn txin in txinList)
+            foreach (var txin in txinList)
             {
               ret = NativeMethods.CfdAddTransactionInput(
                 handle.GetHandle(), txHandle, txin.OutPoint.GetTxid().ToHexString(),
@@ -484,7 +485,7 @@ namespace Cfd
           }
           if ((!(txoutList is null)) && (txoutList.Length > 0))
           {
-            foreach (TxOut txout in txoutList)
+            foreach (var txout in txoutList)
             {
               ret = NativeMethods.CfdAddTransactionOutput(
                 handle.GetHandle(), txHandle, txout.SatoshiValue,
@@ -691,6 +692,34 @@ namespace Cfd
     /// <summary>
     /// Get transaction output data.
     /// </summary>
+    /// <param name="address">txout address.</param>
+    /// <returns>transaction output data.</returns>
+    public TxOut GetTxOut(Address address)
+    {
+      uint index = GetTxOutIndex(address);
+      using (var handle = new ErrorHandle())
+      {
+        return GetOutputByIndex(handle, index);
+      }
+    }
+
+    /// <summary>
+    /// Get transaction output data.
+    /// </summary>
+    /// <param name="lockingScript">txout locking script.</param>
+    /// <returns>transaction output data.</returns>
+    public TxOut GetTxOut(Script lockingScript)
+    {
+      uint index = GetTxOutIndex(lockingScript);
+      using (var handle = new ErrorHandle())
+      {
+        return GetOutputByIndex(handle, index);
+      }
+    }
+
+    /// <summary>
+    /// Get transaction output data.
+    /// </summary>
     /// <param name="index">txout index.</param>
     /// <returns>transaction output data.</returns>
     public TxOut GetTxOut(uint index)
@@ -745,8 +774,8 @@ namespace Cfd
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = NativeMethods.CfdGetConfidentialTxInIndex(
-            handle.GetHandle(), tx,
+        var ret = NativeMethods.CfdGetTxInIndex(
+            handle.GetHandle(), defaultNetType, tx,
             outpoint.GetTxid().ToHexString(),
             outpoint.GetVout(),
             out uint index);
@@ -771,8 +800,8 @@ namespace Cfd
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
-            handle.GetHandle(), tx,
+        var ret = NativeMethods.CfdGetTxOutIndex(
+            handle.GetHandle(), defaultNetType, tx,
             address.ToAddressString(),
             "",
             out uint index);
@@ -787,46 +816,20 @@ namespace Cfd
     /// <summary>
     /// Get transaction output index.
     /// </summary>
-    /// <param name="address">txout confidential address.</param>
+    /// <param name="lockingScript">txout locking script.</param>
     /// <returns>transaction output index.</returns>
-    public uint GetTxOutIndex(ConfidentialAddress address)
+    public uint GetTxOutIndex(Script lockingScript)
     {
-      if (address is null)
+      if (lockingScript is null)
       {
-        throw new ArgumentNullException(nameof(address));
+        throw new ArgumentNullException(nameof(lockingScript));
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
-            handle.GetHandle(), tx,
-            address.ToAddressString(),
+        var ret = NativeMethods.CfdGetTxOutIndex(
+            handle.GetHandle(), defaultNetType, tx,
             "",
-            out uint index);
-        if (ret != CfdErrorCode.Success)
-        {
-          handle.ThrowError(ret);
-        }
-        return index;
-      }
-    }
-
-    /// <summary>
-    /// Get transaction output index.
-    /// </summary>
-    /// <param name="script">txout locking script. (fee is empty string)</param>
-    /// <returns>transaction output index.</returns>
-    public uint GetTxOutIndex(Script script)
-    {
-      if (script is null)
-      {
-        throw new ArgumentNullException(nameof(script));
-      }
-      using (var handle = new ErrorHandle())
-      {
-        var ret = NativeMethods.CfdGetConfidentialTxOutIndex(
-            handle.GetHandle(), tx,
-            "",
-            script.ToHexString(),
+            lockingScript.ToHexString(),
             out uint index);
         if (ret != CfdErrorCode.Success)
         {
@@ -1150,7 +1153,7 @@ namespace Cfd
         }
 
         ret = NativeMethods.CfdAddScriptHashSign(
-            handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
+            handle.GetHandle(), defaultNetType,
             tempTx, txid.ToHexString(), vout, (int)hashType,
             redeemScript.ToHexString(), false, out txString);
         if (ret != CfdErrorCode.Success)
@@ -1159,6 +1162,15 @@ namespace Cfd
         }
         tx = CCommon.ConvertToString(txString);
       }
+    }
+
+    public void AddSign(OutPoint outpoint, CfdHashType hashType, SignParameter signData, bool clearStack)
+    {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      AddSign(outpoint.GetTxid(), outpoint.GetVout(), hashType, signData, clearStack);
     }
 
     public void AddSign(Txid txid, uint vout, CfdHashType hashType, SignParameter signData, bool clearStack)
@@ -1174,7 +1186,7 @@ namespace Cfd
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdAddTxSign(
-            handle.GetHandle(), (int)CfdNetworkType.Liquidv1,
+            handle.GetHandle(), defaultNetType,
             tx, txid.ToHexString(), vout, (int)hashType,
             signData.ToHexString(), signData.IsDerEncode(),
             (int)signData.GetSignatureHashType().SighashType,
@@ -1188,13 +1200,13 @@ namespace Cfd
       }
     }
 
-    public void VerifySign(OutPoint outpoint, Address address, CfdAddressType addressType, long satoshiValue)
+    public bool VerifySign(OutPoint outpoint, Address address, CfdAddressType addressType, long satoshiValue)
     {
       if (outpoint is null)
       {
         throw new ArgumentNullException(nameof(outpoint));
       }
-      VerifySign(outpoint.GetTxid(), outpoint.GetVout(), address, addressType, satoshiValue);
+      return VerifySign(outpoint.GetTxid(), outpoint.GetVout(), address, addressType, satoshiValue);
     }
 
     public bool VerifySign(Txid txid, uint vout, Address address, CfdAddressType addressType, long satoshiValue)
@@ -1225,6 +1237,26 @@ namespace Cfd
       return false;
     }
 
+    public bool VerifySignature(OutPoint outpoint, CfdHashType hashType,
+        SignParameter signature, Pubkey pubkey, SignatureHashType sighashType, long satoshiValue)
+    {
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
+      return VerifySignature(outpoint, hashType, signature.GetData(), pubkey, sighashType, satoshiValue);
+    }
+
+    public bool VerifySignature(OutPoint outpoint, CfdHashType hashType,
+        ByteData signature, Pubkey pubkey, SignatureHashType sighashType, long satoshiValue)
+    {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      return VerifySignature(outpoint.GetTxid(), outpoint.GetVout(), hashType, signature, pubkey, sighashType, satoshiValue);
+    }
+
     public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType,
         ByteData signature, Pubkey pubkey, SignatureHashType sighashType, long satoshiValue)
     {
@@ -1240,10 +1272,16 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(txid));
       }
+      ByteData sig = signature;
+      if (signature.GetSize() > 65)
+      {
+        // decode der
+        sig = SignParameter.DecodeFromDer(sig).GetData();
+      }
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdVerifySignature(
-            handle.GetHandle(), defaultNetType, tx, signature.ToHexString(),
+            handle.GetHandle(), defaultNetType, tx, sig.ToHexString(),
             (int)hashType,
             pubkey.ToHexString(), "", txid.ToHexString(), vout,
             (int)sighashType.SighashType, sighashType.IsSighashAnyoneCanPay,
@@ -1252,7 +1290,7 @@ namespace Cfd
         {
           return true;
         }
-        else if (ret != CfdErrorCode.Success)
+        else if (ret != CfdErrorCode.SignVerificationError)
         {
           handle.ThrowError(ret);
         }
@@ -1260,8 +1298,28 @@ namespace Cfd
       return false;
     }
 
-    public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType,
-        ByteData signature, Script redeemScript, SignatureHashType sighashType, long satoshiValue)
+    public bool VerifySignature(OutPoint outpoint, CfdHashType hashType,
+        SignParameter signature, Pubkey pubkey, Script redeemScript, SignatureHashType sighashType, long satoshiValue)
+    {
+      if (signature is null)
+      {
+        throw new ArgumentNullException(nameof(signature));
+      }
+      return VerifySignature(outpoint, hashType, signature.GetData(), pubkey, redeemScript, sighashType, satoshiValue);
+    }
+
+    public bool VerifySignature(OutPoint outpoint, CfdHashType hashType,
+        ByteData signature, Pubkey pubkey, Script redeemScript, SignatureHashType sighashType, long satoshiValue)
+    {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      return VerifySignature(outpoint.GetTxid(), outpoint.GetVout(), hashType, signature, pubkey, redeemScript, sighashType, satoshiValue);
+    }
+
+    public bool VerifySignature(Txid txid, uint vout, CfdHashType hashType, ByteData signature,
+      Pubkey pubkey, Script redeemScript, SignatureHashType sighashType, long satoshiValue)
     {
       if (txid is null)
       {
@@ -1271,15 +1329,25 @@ namespace Cfd
       {
         throw new ArgumentNullException(nameof(signature));
       }
+      if (pubkey is null)
+      {
+        throw new ArgumentNullException(nameof(pubkey));
+      }
       if (redeemScript is null)
       {
         throw new ArgumentNullException(nameof(redeemScript));
       }
+      ByteData sig = signature;
+      if (signature.GetSize() > 65)
+      {
+        // decode der
+        sig = SignParameter.DecodeFromDer(sig).GetData();
+      }
       using (var handle = new ErrorHandle())
       {
         var ret = NativeMethods.CfdVerifySignature(
-            handle.GetHandle(), default, tx, signature.ToHexString(), (int)hashType,
-            "", redeemScript.ToHexString(),
+            handle.GetHandle(), default, tx, sig.ToHexString(), (int)hashType,
+            pubkey.ToHexString(), redeemScript.ToHexString(),
             txid.ToHexString(), vout,
             (int)sighashType.SighashType, sighashType.IsSighashAnyoneCanPay,
             satoshiValue, "");
@@ -1287,7 +1355,7 @@ namespace Cfd
         {
           return true;
         }
-        else if (ret != CfdErrorCode.Success)
+        else if (ret != CfdErrorCode.SignVerificationError)
         {
           handle.ThrowError(ret);
         }
@@ -1350,10 +1418,6 @@ namespace Cfd
       long targetAmount, string reservedAddress,
       double effectiveFeeRate, double longTermFeeRate, long dustFeeRate, long knapsackMinChange)
     {
-      if (txinList is null)
-      {
-        throw new ArgumentNullException(nameof(txinList));
-      }
       if (utxoList is null)
       {
         throw new ArgumentNullException(nameof(utxoList));
@@ -1372,17 +1436,20 @@ namespace Cfd
         }
         try
         {
-          foreach (var txin in txinList)
+          if (txinList != null)
           {
-            ret = NativeMethods.CfdAddTxInForFundRawTx(
-              handle.GetHandle(), fundHandle,
-              txin.GetOutPoint().GetTxid().ToHexString(),
-              txin.GetOutPoint().GetVout(),
-              txin.GetAmount(), txin.GetDescriptor().ToString(),
-              "", false, false, false, 0, "");
-            if (ret != CfdErrorCode.Success)
+            foreach (var txin in txinList)
             {
-              handle.ThrowError(ret);
+              ret = NativeMethods.CfdAddTxInForFundRawTx(
+                handle.GetHandle(), fundHandle,
+                txin.GetOutPoint().GetTxid().ToHexString(),
+                txin.GetOutPoint().GetVout(),
+                txin.GetAmount(), txin.GetDescriptor().ToString(),
+                "", false, false, false, 0, "");
+              if (ret != CfdErrorCode.Success)
+              {
+                handle.ThrowError(ret);
+              }
             }
           }
 
@@ -1406,7 +1473,6 @@ namespace Cfd
             handle.ThrowError(ret);
           }
 
-          // CfdFundTxOption.UseBlind
           ret = NativeMethods.CfdSetOptionFundRawTx(
             handle.GetHandle(), fundHandle,
             CfdFundTxOption.DustFeeRate, 0, dustFeeRate, false);
@@ -1455,6 +1521,7 @@ namespace Cfd
           }
 
           tx = fundTx;
+          lastTxFee = txFee;
           return usedReserveAddress;
         }
         finally
@@ -1516,6 +1583,11 @@ namespace Cfd
       return txLocktime;
     }
 
+    public long GetLastTxFee()
+    {
+      return lastTxFee;
+    }
+
     private void UpdateTxInfoCache()
     {
       if (tx == lastGetTx)
@@ -1524,12 +1596,12 @@ namespace Cfd
       }
       using (var handle = new ErrorHandle())
       {
-        var ret = NativeMethods.CfdGetConfidentialTxInfo(
+        var ret = NativeMethods.CfdGetTxInfo(
             handle.GetHandle(),
+            defaultNetType,
             tx,
             out IntPtr outputTxid,
             out IntPtr outputWtxid,
-            out IntPtr outputWitHash,
             out uint outputSize,
             out uint outputVsize,
             out uint outputWeight,
@@ -1541,7 +1613,6 @@ namespace Cfd
         }
         txid = CCommon.ConvertToString(outputTxid);
         wtxid = CCommon.ConvertToString(outputWtxid);
-        CCommon.ConvertToString(outputWitHash);
         txSize = outputSize;
         txVsize = outputVsize;
         txWeight = outputWeight;
@@ -1566,8 +1637,8 @@ namespace Cfd
       var utxoTxid = CCommon.ConvertToString(outTxid);
       var scriptSig = CCommon.ConvertToString(outScriptSig);
 
-      ret = NativeMethods.CfdGetConfidentialTxInWitnessCount(
-          handle.GetHandle(), tx, index,
+      ret = NativeMethods.CfdGetTxInWitnessCount(
+          handle.GetHandle(), defaultNetType, tx, index,
           out uint witnessCount);
       if (ret != CfdErrorCode.Success)
       {
@@ -1577,11 +1648,11 @@ namespace Cfd
 
       for (uint witnessIndex = 0; witnessIndex < witnessCount; ++witnessIndex)
       {
-#pragma warning disable IDE0059 // 値の不必要な代入
+#pragma warning disable IDE0059 // Unnecessary value assignment
         IntPtr stackData = IntPtr.Zero;
-#pragma warning restore IDE0059 // 値の不必要な代入
-        ret = NativeMethods.CfdGetConfidentialTxInWitness(
-            handle.GetHandle(), tx, index, witnessIndex,
+#pragma warning restore IDE0059 // Unnecessary value assignment
+        ret = NativeMethods.CfdGetTxInWitness(
+            handle.GetHandle(), defaultNetType, tx, index, witnessIndex,
             out stackData);
         if (ret != CfdErrorCode.Success)
         {
@@ -1597,8 +1668,8 @@ namespace Cfd
 
     private uint GetInputCount(ErrorHandle handle)
     {
-      var ret = NativeMethods.CfdGetConfidentialTxInCount(
-          handle.GetHandle(), tx, out uint count);
+      var ret = NativeMethods.CfdGetTxInCount(
+          handle.GetHandle(), defaultNetType, tx, out uint count);
       if (ret != CfdErrorCode.Success)
       {
         handle.ThrowError(ret);
@@ -1623,8 +1694,8 @@ namespace Cfd
 
     private uint GetOutputCount(ErrorHandle handle)
     {
-      var ret = NativeMethods.CfdGetConfidentialTxOutCount(
-          handle.GetHandle(), tx, out uint count);
+      var ret = NativeMethods.CfdGetTxOutCount(
+          handle.GetHandle(), defaultNetType, tx, out uint count);
       if (ret != CfdErrorCode.Success)
       {
         handle.ThrowError(ret);

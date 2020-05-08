@@ -1,6 +1,4 @@
-using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Cfd.xTests
 {
@@ -59,6 +57,7 @@ namespace Cfd.xTests
       HDWallet hdWallet2 = new HDWallet(mnemonicEn, "TREZOR");
       Assert.Equal(hdWallet1.GetSeed().ToHexString(),
         hdWallet2.GetSeed().ToHexString());
+      Assert.True(hdWallet1.Equals(hdWallet2));
 
       string[] mnemonicWords = mnemonicEn.Split(' ');
       HDWallet hdWallet3 = new HDWallet(mnemonicWords, "TREZOR");

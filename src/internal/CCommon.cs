@@ -21,11 +21,6 @@ namespace Cfd
       return result;
     }
 
-    public static CfdErrorCode CfdInitialize()
-    {
-      return NativeMethods.CfdInitialize();
-    }
-
     internal static CfdErrorCode CfdCreateSimpleHandle(
         [Out] out IntPtr handle)
     {
@@ -52,14 +47,6 @@ namespace Cfd
     {
       return NativeMethods.CfdRequestExecuteJson(handle, requestName,
           requestJsonString, out responseJsonString);
-    }
-
-    internal static CfdErrorCode CfdSerializeByteData(
-        [In] IntPtr handle,
-        [In] string buffer,
-        [Out] out IntPtr output)
-    {
-      return NativeMethods.CfdSerializeByteData(handle, buffer, out output);
     }
   }
 }

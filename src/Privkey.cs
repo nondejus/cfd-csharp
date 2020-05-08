@@ -293,6 +293,7 @@ namespace Cfd
         SignParameter signature = new SignParameter(CCommon.ConvertToString(signatureHex));
         SignatureHashType sighashType = new SignatureHashType(CfdSighashType.All, false);
         signature.SetDerEncode(sighashType);
+        signature.SetRelatedPubkey(GetPubkey());
         return signature;
       }
     }

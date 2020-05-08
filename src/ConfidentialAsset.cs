@@ -2,7 +2,7 @@ using System;
 
 namespace Cfd
 {
-  public class ConfidentialAsset
+  public class ConfidentialAsset : IEquatable<ConfidentialAsset>
   {
     const uint Size = 32;
     const uint CommitmentSize = 33;
@@ -65,6 +65,55 @@ namespace Cfd
         return CfdCommon.ReverseBytes(assetBytes);
       }
       return StringUtil.ToBytes(commitment);
+    }
+
+    public bool Equals(ConfidentialAsset other)
+    {
+      if (other is null)
+      {
+        return false;
+      }
+      if (ReferenceEquals(this, other))
+      {
+        return true;
+      }
+      return commitment == other.commitment;
+    }
+
+    public override bool Equals(object obj)
+    {
+      if (obj is null)
+      {
+        return false;
+      }
+      if ((obj as ConfidentialAsset) != null)
+      {
+        return Equals((ConfidentialAsset)obj);
+      }
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      return commitment.GetHashCode(StringComparison.Ordinal);
+    }
+
+    public static bool operator ==(ConfidentialAsset lhs, ConfidentialAsset rhs)
+    {
+      if (lhs is null)
+      {
+        if (rhs is null)
+        {
+          return true;
+        }
+        return false;
+      }
+      return lhs.Equals(rhs);
+    }
+
+    public static bool operator !=(ConfidentialAsset lhs, ConfidentialAsset rhs)
+    {
+      return !(lhs == rhs);
     }
   }
 }

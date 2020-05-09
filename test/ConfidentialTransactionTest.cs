@@ -705,9 +705,9 @@ namespace Cfd.xTests
 
       // estimate fee on blind tx
       FeeData feeData = tx.EstimateFee(utxos, new ConfidentialAsset("186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179"));
-      Assert.Equal(270, feeData.TxFee);
-      Assert.Equal(179, feeData.InputFee);
-      Assert.Equal(449, feeData.InputFee + feeData.TxFee);
+      Assert.Equal(405, feeData.TxFee);
+      Assert.Equal(268, feeData.InputFee);
+      Assert.Equal(673, feeData.InputFee + feeData.TxFee);
 
       tx.UpdateFee(feeData.InputFee + feeData.TxFee,
         new ConfidentialAsset("186c7f955149a5274b39e24b6a50d1d6479f552f6522d91f3a97d771f1c18179"));

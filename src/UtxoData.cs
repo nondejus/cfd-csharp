@@ -1,8 +1,5 @@
 using System;
 
-/// <summary>
-/// cfd library namespace.
-/// </summary>
 namespace Cfd
 {
   /// <summary>
@@ -10,53 +7,79 @@ namespace Cfd
   /// </summary>
   public class UtxoData : IEquatable<UtxoData>
   {
-    public static readonly uint Size = 32;
-    private readonly string txid;
+    private readonly OutPoint outpoint;
+    private readonly long amount;
+    private readonly Descriptor descriptor;
 
     /// <summary>
     /// Constructor. (empty)
     /// </summary>
     public UtxoData()
     {
-      txid = "0000000000000000000000000000000000000000000000000000000000000000";
+      // do nothing
     }
 
-    public UtxoData(string txid)
+    public UtxoData(OutPoint outpoint)
     {
-      if (txid is null)
+      if (outpoint is null)
       {
-        throw new ArgumentNullException(nameof(txid));
+        throw new ArgumentNullException(nameof(outpoint));
       }
-      if (txid.Length != Size * 2)
-      {
-        CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to txid size.");
-      }
-      this.txid = txid;
+      this.outpoint = outpoint;
     }
 
-    public UtxoData(byte[] bytes)
+    public UtxoData(OutPoint outpoint, Descriptor descriptor)
     {
-      if (bytes is null)
+      if (outpoint is null)
       {
-        throw new ArgumentNullException(nameof(bytes));
+        throw new ArgumentNullException(nameof(outpoint));
       }
-      if (bytes.Length != Size)
+      if (descriptor is null)
       {
-        CfdCommon.ThrowError(CfdErrorCode.IllegalArgumentError, "Failed to txid size.");
+        throw new ArgumentNullException(nameof(descriptor));
       }
-      var txidBytes = CfdCommon.ReverseBytes(bytes);
-      this.txid = StringUtil.FromBytes(txidBytes);
+      this.outpoint = outpoint;
+      this.descriptor = descriptor;
     }
 
-    public string ToHexString()
+    public UtxoData(OutPoint outpoint, long amount)
     {
-      return txid;
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      this.outpoint = outpoint;
+      this.amount = amount;
     }
 
-    public byte[] GetBytes()
+    public UtxoData(OutPoint outpoint, long amount, Descriptor descriptor)
     {
-      var txidBytes = StringUtil.ToBytes(txid);
-      return CfdCommon.ReverseBytes(txidBytes);
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      if (descriptor is null)
+      {
+        throw new ArgumentNullException(nameof(descriptor));
+      }
+      this.outpoint = outpoint;
+      this.amount = amount;
+      this.descriptor = descriptor;
+    }
+
+    public OutPoint GetOutPoint()
+    {
+      return outpoint;
+    }
+
+    public long GetAmount()
+    {
+      return amount;
+    }
+
+    public Descriptor GetDescriptor()
+    {
+      return descriptor;
     }
 
     public bool Equals(UtxoData other)
@@ -65,12 +88,12 @@ namespace Cfd
       {
         return false;
       }
-      if (Object.ReferenceEquals(this, other))
+      if (ReferenceEquals(this, other))
       {
         return true;
       }
 
-      return (txid == other.txid);
+      return (outpoint == other.outpoint);
     }
 
     public override bool Equals(object obj)
@@ -81,14 +104,14 @@ namespace Cfd
       }
       if ((obj as UtxoData) != null)
       {
-        return this.Equals((UtxoData)obj);
+        return Equals((UtxoData)obj);
       }
       return false;
     }
 
     public override int GetHashCode()
     {
-      return HashCode.Combine(txid);
+      return HashCode.Combine(outpoint);
     }
 
     public static bool operator ==(UtxoData lhs, UtxoData rhs)

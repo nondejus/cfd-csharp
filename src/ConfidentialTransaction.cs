@@ -1911,7 +1911,7 @@ namespace Cfd
     public FeeData EstimateFee(ElementsUtxoData[] txinList,
       ConfidentialAsset feeAsset)
     {
-      return EstimateFee(txinList, 0.1, feeAsset, true);
+      return EstimateFee(txinList, 0.15, feeAsset, true);
     }
 
     public FeeData EstimateFee(ElementsUtxoData[] txinList, double feeRate,

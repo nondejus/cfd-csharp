@@ -737,10 +737,11 @@ namespace Cfd.xTests
         { new ConfidentialAsset(assetA), addr1.ToAddressString() },
         { new ConfidentialAsset(assetB), addr2.ToAddressString() },
       };
-      string[] usedAddr = tx.FundRawTransaction(null, utxos, targetAssetMap, reservedAddressMap, feeAsset, 0.1);
+      double feeRate = 0.1;
+      string[] usedAddr = tx.FundRawTransaction(null, utxos, targetAssetMap, reservedAddressMap, feeAsset, feeRate);
       output.WriteLine("tx: " + tx.ToHexString());
 
-      Assert.Equal("0200000000020bfa8774c5f753ce2f801a8106413b470af94edbff5b4242ed4c5a26d20e72b90000000000ffffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff050100000000000000000000000000000000000000000000000000000000000000aa010000000000989680001600144352a1a6e86311f22274f7ebb2746de21b09b15d0100000000000000000000000000000000000000000000000000000000000000bb01000000000007a120001600148beaaac4654cf4ebd8e46ca5062b0e7fb3e7470c0100000000000000000000000000000000000000000000000000000000000000aa01000000000000012a00000100000000000000000000000000000000000000000000000000000000000000bb010000000001124c1e00160014a53be40113bb50f2b8b2d0bfea1e823e75632b5f0100000000000000000000000000000000000000000000000000000000000000aa0100000000004b5a340016001478eb9fc2c9e1cdf633ecb646858ba862b21384ab00000000",
+      Assert.Equal("0200000000020bfa8774c5f753ce2f801a8106413b470af94edbff5b4242ed4c5a26d20e72b90000000000ffffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff050100000000000000000000000000000000000000000000000000000000000000aa010000000000989680001600144352a1a6e86311f22274f7ebb2746de21b09b15d0100000000000000000000000000000000000000000000000000000000000000bb01000000000007a120001600148beaaac4654cf4ebd8e46ca5062b0e7fb3e7470c0100000000000000000000000000000000000000000000000000000000000000aa01000000000000018200000100000000000000000000000000000000000000000000000000000000000000bb010000000001124c1e00160014a53be40113bb50f2b8b2d0bfea1e823e75632b5f0100000000000000000000000000000000000000000000000000000000000000aa0100000000004b59dc0016001478eb9fc2c9e1cdf633ecb646858ba862b21384ab00000000",
         tx.ToHexString());
       output.WriteLine(ConfidentialTransaction.DecodeRawTransaction(tx));
       Assert.Equal(2, usedAddr.Length);
@@ -751,7 +752,17 @@ namespace Cfd.xTests
         Assert.Equal(addr2.ToAddressString(), usedAddr[0]);
         Assert.Equal(addr1.ToAddressString(), usedAddr[1]);
       }
-      Assert.Equal(298, tx.GetLastTxFee());
+      Assert.Equal(386, tx.GetLastTxFee());
+
+      // calc fee
+      ElementsUtxoData[] feeUtxos = new[]{
+        utxos[5],
+        utxos[9],
+      };
+      FeeData feeData = tx.EstimateFee(feeUtxos, feeRate, feeAsset, true);
+      Assert.Equal(375, feeData.TxFee + feeData.InputFee);
+      Assert.Equal(357, feeData.TxFee);
+      Assert.Equal(18, feeData.InputFee);
     }
 
     [Fact]
@@ -771,42 +782,28 @@ namespace Cfd.xTests
           true,
           new BlindFactor("0b8954757234fd3ec9cf0dd6ef0a89d825ec56a9532e7da4b6cb90c51be3bbd8"),
           new BlindFactor("62e36e1f0fa4916b031648a6b6903083069fa587572a88b729250cde528cfd3b"));
-      Address outAddr = new Address("2dodsWJgP3pTWWidK5hDxuYHqC1U4CEnT3n");
+      Address outAddr1 = new Address("2djHX9wtrtdyGw9cer1u6zB6Yq4SRD8V5zw");
+      Address outAddr2 = new Address("2dodsWJgP3pTWWidK5hDxuYHqC1U4CEnT3n");
       ConfidentialTransaction tx = new ConfidentialTransaction(2, 0, new[] {
         new ConfidentialTxIn(inputUtxo.GetOutPoint()),
       }, new[] {
         new ConfidentialTxOut(
           new ConfidentialAsset(tokenAsset),
-          new ConfidentialValue(700000000), outAddr.GetLockingScript()),
+          new ConfidentialValue(700000000), outAddr1.GetLockingScript()),
       });
       ConfidentialAsset issueAsset = tx.SetRawReissueAsset(inputUtxo.GetOutPoint(),
         600000000, inputUtxo.GetAssetBlindFactor().GetData(),
         new ByteData("6f9ccf5949eba5d6a08bff7a015e825c97824e82d57c8a0c77f9a41908fe8306"),
-        outAddr);
+        outAddr2);
       output.WriteLine("issue asset: " + issueAsset.ToHexString());
 
       ElementsUtxoData[] inputUtxos = new[]
       {
         inputUtxo,
-        new ElementsUtxoData(
-          new OutPoint("57a15002d066ce52573d674df925c9bc0f1164849420705f2cfad8a68111230f", 1),
-          issueAsset.ToHexString(),
-          600000000,
-          issueAsset,
-          new ConfidentialValue(600000000),
-          desc2,
-          true),
       };
 
       // add txout
-      ElementsUtxoData[] utxosBase = GetElementsBnbUtxoList(CfdNetworkType.Liquidv1);
-      ElementsUtxoData[] utxos = new ElementsUtxoData[utxosBase.Length + 2];
-      for (var i = 0; i < utxosBase.Length; ++i)
-      {
-        utxos[i] = utxosBase[i];
-      }
-      utxos[utxosBase.Length] = inputUtxos[0];
-      utxos[utxosBase.Length + 1] = inputUtxos[1];
+      ElementsUtxoData[] utxos = GetElementsBnbUtxoList(CfdNetworkType.Liquidv1);
 
       ExtPubkey key = new ExtPubkey("xpub661MyMwAqRbcGB88KaFbLGiYAat55APKhtWg4uYMkXAmfuSTbq2QYsn9sKJCj1YqZPafsboef4h4YbXXhNhPwMbkHTpkf3zLhx7HvFw1NDy");
       Address setAddr1 = new Address(key.DerivePubkey(11).GetPubkey(), CfdAddressType.P2wpkh, CfdNetworkType.Liquidv1);
@@ -831,10 +828,11 @@ namespace Cfd.xTests
         { new ConfidentialAsset(assetA), addr1.ToAddressString() },
         { new ConfidentialAsset(assetB), addr2.ToAddressString() },
       };
-      string[] usedAddr = tx.FundRawTransaction(inputUtxos, utxos, targetAssetMap, reservedAddressMap, feeAsset, 0.1);
+      double feeRate = 0.1;
+      string[] usedAddr = tx.FundRawTransaction(inputUtxos, utxos, targetAssetMap, reservedAddressMap, feeAsset, feeRate);
       output.WriteLine("tx: " + tx.ToHexString());
 
-      Assert.Equal("0200000000030f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c34600000bfa8774c5f753ce2f801a8106413b470af94edbff5b4242ed4c5a26d20e72b90000000000ffffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff07010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b92700001976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac01cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c34600001976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac0100000000000000000000000000000000000000000000000000000000000000aa010000000000989680001600144352a1a6e86311f22274f7ebb2746de21b09b15d0100000000000000000000000000000000000000000000000000000000000000bb01000000000007a120001600148beaaac4654cf4ebd8e46ca5062b0e7fb3e7470c0100000000000000000000000000000000000000000000000000000000000000aa01000000000000032e00000100000000000000000000000000000000000000000000000000000000000000bb010000000001124c1e00160014a53be40113bb50f2b8b2d0bfea1e823e75632b5f0100000000000000000000000000000000000000000000000000000000000000aa0100000000004b58300016001478eb9fc2c9e1cdf633ecb646858ba862b21384ab00000000",
+      Assert.Equal("0200000000030f231181a6d8fa2c5f7020948464110fbcc925f94d673d5752ce66d00250a1570100008000ffffffffd8bbe31bc590cbb6a47d2e53a956ec25d8890aefd60dcfc93efd34727554890b0683fe0819a4f9770c8a7cd5824e82975c825e017aff8ba0d6a5eb4959cf9c6f010000000023c34600000bfa8774c5f753ce2f801a8106413b470af94edbff5b4242ed4c5a26d20e72b90000000000ffffffff040b0000000000000000000000000000000000000000000000000000000000000000000000ffffffff07010bad521bafdac767421d45b71b29a349c7b2ca2a06b5d8e3b5898c91df2769ed010000000029b92700001976a9146c22e209d36612e0d9d2a20b814d7d8648cc7a7788ac01cdb0ed311810e61036ac9255674101497850f5eee5e4320be07479c05473cbac010000000023c34600001976a9149bdcb18911fa9faad6632ca43b81739082b0a19588ac0100000000000000000000000000000000000000000000000000000000000000aa010000000000989680001600144352a1a6e86311f22274f7ebb2746de21b09b15d0100000000000000000000000000000000000000000000000000000000000000bb01000000000007a120001600148beaaac4654cf4ebd8e46ca5062b0e7fb3e7470c0100000000000000000000000000000000000000000000000000000000000000aa0100000000000002dc00000100000000000000000000000000000000000000000000000000000000000000bb010000000001124c1e00160014a53be40113bb50f2b8b2d0bfea1e823e75632b5f0100000000000000000000000000000000000000000000000000000000000000aa0100000000004b58820016001478eb9fc2c9e1cdf633ecb646858ba862b21384ab00000000",
         tx.ToHexString());
       output.WriteLine(ConfidentialTransaction.DecodeRawTransaction(tx));
       Assert.Equal(2, usedAddr.Length);
@@ -845,7 +843,18 @@ namespace Cfd.xTests
         Assert.Equal(addr2.ToAddressString(), usedAddr[0]);
         Assert.Equal(addr1.ToAddressString(), usedAddr[1]);
       }
-      Assert.Equal(814, tx.GetLastTxFee());
+      Assert.Equal(732, tx.GetLastTxFee());
+
+      // calc fee
+      ElementsUtxoData[] feeUtxos = new[]{
+        inputUtxo,
+        utxos[5],
+        utxos[9],
+      };
+      FeeData feeData = tx.EstimateFee(feeUtxos, feeRate, feeAsset, true);
+      Assert.Equal(721, feeData.TxFee + feeData.InputFee);
+      Assert.Equal(533, feeData.TxFee);
+      Assert.Equal(188, feeData.InputFee);
     }
 
     [Fact]

@@ -303,14 +303,9 @@ namespace Cfd.xTests
         utxos[1],
         utxos[2],
       };
-      UtxoData[] otherUtxos = new UtxoData[utxos.Length - 2];
-      otherUtxos[0] = utxos[0];
-      for (var i = 3; i < utxos.Length; ++i)
-      {
-        otherUtxos[i - 2] = utxos[i];
-      }
       Address addr1 = new Address(key.DerivePubkey(1).GetPubkey(), CfdAddressType.P2wpkh, CfdNetworkType.Mainnet);
-      string usedAddr = tx.FundRawTransaction(inputUtxos, otherUtxos, addr1.ToAddressString(), 20.0);
+      double feeRate = 20.0;
+      string usedAddr = tx.FundRawTransaction(inputUtxos, utxos, addr1.ToAddressString(), feeRate);
       output.WriteLine("tx: " + tx.ToHexString());
 
       Assert.Equal("02000000030a9a33750a810cd384ca5d93b09513f1eb5d93c669091b29eef710d2391ff7300000000000ffffffff0a9bf51e0ac499391efd9426e2c909901edd74a97d2378b49c8832c491ad1e9e0000000000ffffffff0a503dbd4f8f2b064c70e048b21f93fe4584174478abf5f44747932cd21da87c0000000000ffffffff0300e1f505000000001600144352a1a6e86311f22274f7ebb2746de21b09b15d00e1f505000000001600148beaaac4654cf4ebd8e46ca5062b0e7fb3e7470c0831b8040000000016001478eb9fc2c9e1cdf633ecb646858ba862b21384ab00000000",
@@ -318,6 +313,16 @@ namespace Cfd.xTests
       output.WriteLine(Transaction.DecodeRawTransaction(tx));
       Assert.Equal(addr1.ToAddressString(), usedAddr);
       Assert.Equal(7460, tx.GetLastTxFee());
+
+      UtxoData[] feeUtxos = new[]{
+        utxos[1],
+        utxos[2],
+        utxos[0],
+      };
+      FeeData feeData = tx.EstimateFee(feeUtxos, feeRate);
+      Assert.Equal(7460, feeData.TxFee + feeData.InputFee);
+      Assert.Equal(2060, feeData.TxFee);
+      Assert.Equal(5400, feeData.InputFee);
     }
 
     static UtxoData[] GetBitcoinBnbUtxoList(CfdNetworkType netType)

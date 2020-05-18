@@ -10,6 +10,7 @@ namespace Cfd
     private readonly OutPoint outpoint;
     private readonly long amount;
     private readonly Descriptor descriptor;
+    private readonly Script scriptsigTemplate;
 
     /// <summary>
     /// Constructor. (empty)
@@ -67,6 +68,29 @@ namespace Cfd
       this.descriptor = descriptor;
     }
 
+    public UtxoData(OutPoint outpoint, long amount, Descriptor descriptor, Script scriptsigTemplate)
+    {
+      if (outpoint is null)
+      {
+        throw new ArgumentNullException(nameof(outpoint));
+      }
+      if (descriptor is null)
+      {
+        throw new ArgumentNullException(nameof(descriptor));
+      }
+      this.outpoint = outpoint;
+      this.amount = amount;
+      this.descriptor = descriptor;
+      if (scriptsigTemplate is null)
+      {
+        this.scriptsigTemplate = new Script();
+      }
+      else
+      {
+        this.scriptsigTemplate = scriptsigTemplate;
+      }
+    }
+
     public OutPoint GetOutPoint()
     {
       return outpoint;
@@ -80,6 +104,11 @@ namespace Cfd
     public Descriptor GetDescriptor()
     {
       return descriptor;
+    }
+
+    public Script GetScriptSigTemplate()
+    {
+      return (scriptsigTemplate is null) ? new Script() : scriptsigTemplate;
     }
 
     public bool Equals(UtxoData other)

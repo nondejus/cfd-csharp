@@ -23,6 +23,18 @@ namespace Cfd
     public static readonly int LongTermFeeRate = 3;
     /// knapsack min change (int64)
     public static readonly int KnapsackMinChange = 4;
+    /// blind exponent (elements only) (int64)
+    public static readonly int Exponent = 5;
+    /// blind minimum bits (elements only) (int64)
+    public static readonly int MinimumBits = 6;
+  };
+
+  public static class CfdEstimateFeeOption
+  {
+    /// blind exponent (elements only) (int64)
+    public static readonly int Exponent = 1;
+    /// blind minimum bits (elements only) (int64)
+    public static readonly int MinimumBits = 2;
   };
 
   public struct FeeData : IEquatable<FeeData>
@@ -1381,10 +1393,11 @@ namespace Cfd
         {
           foreach (UtxoData txin in txinList)
           {
-            ret = NativeMethods.CfdAddTxInForEstimateFee(
+            ret = NativeMethods.CfdAddTxInTemplateForEstimateFee(
               handle.GetHandle(), feeHandle, txin.GetOutPoint().GetTxid().ToHexString(),
               txin.GetOutPoint().GetVout(), txin.GetDescriptor().ToString(),
-              "", false, false, false, 0, "");
+              "", false, false, false, 0, "",
+              txin.GetScriptSigTemplate().ToHexString());
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);
@@ -1440,12 +1453,13 @@ namespace Cfd
           {
             foreach (var txin in txinList)
             {
-              ret = NativeMethods.CfdAddTxInForFundRawTx(
+              ret = NativeMethods.CfdAddTxInTemplateForFundRawTx(
                 handle.GetHandle(), fundHandle,
                 txin.GetOutPoint().GetTxid().ToHexString(),
                 txin.GetOutPoint().GetVout(),
                 txin.GetAmount(), txin.GetDescriptor().ToString(),
-                "", false, false, false, 0, "");
+                "", false, false, false, 0, "",
+                txin.GetScriptSigTemplate().ToHexString());
               if (ret != CfdErrorCode.Success)
               {
                 handle.ThrowError(ret);
@@ -1455,11 +1469,12 @@ namespace Cfd
 
           foreach (var utxo in utxoList)
           {
-            ret = NativeMethods.CfdAddUtxoForFundRawTx(
+            ret = NativeMethods.CfdAddUtxoTemplateForFundRawTx(
               handle.GetHandle(), fundHandle,
               utxo.GetOutPoint().GetTxid().ToHexString(),
               utxo.GetOutPoint().GetVout(),
-              utxo.GetAmount(), utxo.GetDescriptor().ToString(), "");
+              utxo.GetAmount(), utxo.GetDescriptor().ToString(), "",
+              utxo.GetScriptSigTemplate().ToHexString());
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);

@@ -5,6 +5,11 @@ namespace Cfd
 {
   public class CoinSelectionUtil
   {
+    /// option: blind exponent (int64)
+    public static readonly int Exponent = 1;
+    /// option: blind minimum bits (int64)
+    public static readonly int MinimumBits = 2;
+
     private long lastSelectedUtxoFee;
 
     public static long GetTotalAmount(UtxoData[] utxoList)
@@ -72,12 +77,12 @@ namespace Cfd
           {
             string desc = (utxoList[index].GetDescriptor() is null) ?
               "" : utxoList[index].GetDescriptor().ToString();
-            ret = NativeMethods.CfdAddCoinSelectionUtxo(
+            ret = NativeMethods.CfdAddCoinSelectionUtxoTemplate(
               handle.GetHandle(), coinSelectHandle, index,
               utxoList[index].GetOutPoint().GetTxid().ToHexString(),
               utxoList[index].GetOutPoint().GetVout(),
               utxoList[index].GetAmount(), "",
-              desc);
+              desc, utxoList[index].GetScriptSigTemplate().ToHexString());
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);
@@ -154,7 +159,18 @@ namespace Cfd
       double effectiveFeeRate)
     {
       return SelectCoinsForElements(utxoList, targetAssetAmountMap, feeAsset, txFeeAmount,
-        effectiveFeeRate, effectiveFeeRate, -1, -1);
+        effectiveFeeRate, 0, ConfidentialTransaction.defaultMinimumBits,
+        effectiveFeeRate, -1, -1);
+    }
+
+    public ElementsUtxoData[] SelectCoinsForElements(
+      ElementsUtxoData[] utxoList,
+      IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
+      ConfidentialAsset feeAsset, long txFeeAmount,
+      double effectiveFeeRate, int exponent, int minimumBits)
+    {
+      return SelectCoinsForElements(utxoList, targetAssetAmountMap, feeAsset, txFeeAmount,
+        effectiveFeeRate, exponent, minimumBits, effectiveFeeRate, -1, -1);
     }
 
     public ElementsUtxoData[] SelectCoinsForElements(
@@ -162,6 +178,19 @@ namespace Cfd
       IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
       ConfidentialAsset feeAsset, long txFeeAmount,
       double effectiveFeeRate, double longTermFeeRate,
+      long dustFeeRate, long knapsackMinChange)
+    {
+      return SelectCoinsForElements(utxoList, targetAssetAmountMap, feeAsset, txFeeAmount,
+        effectiveFeeRate, 0, ConfidentialTransaction.defaultMinimumBits,
+        longTermFeeRate, dustFeeRate, knapsackMinChange);
+    }
+
+    public ElementsUtxoData[] SelectCoinsForElements(
+      ElementsUtxoData[] utxoList,
+      IDictionary<ConfidentialAsset, long> targetAssetAmountMap,
+      ConfidentialAsset feeAsset, long txFeeAmount,
+      double effectiveFeeRate, int exponent, int minimumBits,
+      double longTermFeeRate,
       long dustFeeRate, long knapsackMinChange)
     {
       if (utxoList is null)
@@ -206,13 +235,13 @@ namespace Cfd
           {
             string desc = (utxoList[index].GetDescriptor() is null) ?
               "" : utxoList[index].GetDescriptor().ToString();
-            ret = NativeMethods.CfdAddCoinSelectionUtxo(
+            ret = NativeMethods.CfdAddCoinSelectionUtxoTemplate(
               handle.GetHandle(), coinSelectHandle, index,
               utxoList[index].GetOutPoint().GetTxid().ToHexString(),
               utxoList[index].GetOutPoint().GetVout(),
               utxoList[index].GetAmount(),
               utxoList[index].GetAsset(),
-              desc);
+              desc, utxoList[index].GetScriptSigTemplate().ToHexString());
             if (ret != CfdErrorCode.Success)
             {
               handle.ThrowError(ret);
@@ -231,6 +260,25 @@ namespace Cfd
             }
             ++assetIndex;
             targetAmountAll += targetAssetAmountMap[key];
+          }
+
+          if (exponent >= -1)
+          {
+            ret = NativeMethods.CfdSetOptionCoinSelection(handle.GetHandle(), coinSelectHandle,
+              Exponent, exponent, 0, false);
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
+          }
+          if (minimumBits >= 0)
+          {
+            ret = NativeMethods.CfdSetOptionCoinSelection(handle.GetHandle(), coinSelectHandle,
+                MinimumBits, minimumBits, 0, false);
+            if (ret != CfdErrorCode.Success)
+            {
+              handle.ThrowError(ret);
+            }
           }
 
           ret = NativeMethods.CfdFinalizeCoinSelection(

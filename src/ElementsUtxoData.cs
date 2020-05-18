@@ -77,7 +77,13 @@ namespace Cfd
     }
 
     public ElementsUtxoData(OutPoint outpoint, ConfidentialAsset asset, ConfidentialValue value, Descriptor descriptor)
-         : base(outpoint, ((value is null) ? 0 : value.GetSatoshiValue()), descriptor)
+         : this(outpoint, asset, value, descriptor, null)
+    {
+      // do nothing
+    }
+
+    public ElementsUtxoData(OutPoint outpoint, ConfidentialAsset asset, ConfidentialValue value, Descriptor descriptor, Script scriptsigTemplte)
+         : base(outpoint, ((value is null) ? 0 : value.GetSatoshiValue()), descriptor, scriptsigTemplte)
     {
       if (asset is null)
       {
@@ -137,7 +143,15 @@ namespace Cfd
     public ElementsUtxoData(OutPoint outpoint, string asset,
         long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
         Descriptor descriptor, BlindFactor assetBlinder, BlindFactor amountBlinder)
-          : base(outpoint, amount, descriptor)
+          : this(outpoint, asset, amount, assetCommitment, valueCommitment, descriptor, assetBlinder, amountBlinder, null)
+    {
+      // do nothing
+    }
+
+    public ElementsUtxoData(OutPoint outpoint, string asset,
+        long amount, ConfidentialAsset assetCommitment, ConfidentialValue valueCommitment,
+        Descriptor descriptor, BlindFactor assetBlinder, BlindFactor amountBlinder, Script scriptsigTemplate)
+          : base(outpoint, amount, descriptor, scriptsigTemplate)
     {
       if (asset is null)
       {

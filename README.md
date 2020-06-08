@@ -10,16 +10,15 @@
 
 ### Windows
 
-- C# (7.1 or higher)
-  - .NET Framework 4.7 or higher
-  - .NET Core 2.2.110 or higher
+- C# (8.0 or higher)
+  - .NET Core 3.0 or higher
 - CMake (3.14.3 or higher)
 - Build Tools for Visual Studio (2017 or higher)
 
 ### MacOS
 
-- C# (7.1 or higher)
-  - .NET Core 2.2.110 or higher
+- C# (8.0 or higher)
+  - .NET Core 3.0 or higher
 - CMake (3.14.3 or higher)
 
 - [Homebrew](https://brew.sh/)
@@ -35,8 +34,8 @@ brew cask install dotnet-sdk
 
 ### Linux(Ubuntu)
 
-- C# (7.1 or higher)
-  - .NET Core 2.2.110 or higher
+- C# (8.0 or higher)
+  - .NET Core 3.0 or higher
 - CMake (3.14.3 or higher)
 
 ```Shell
@@ -77,12 +76,6 @@ cmake version 3.14.2 or lower, download from website and install cmake.
 ./tools/build.sh
 ```
 
-- .NET Core 2.x
-```Shell
-# configure & build
-./tools/build_core2.sh
-```
-
 ---
 
 ## Example
@@ -103,9 +96,6 @@ cmake version 3.14.2 or lower, download from website and install cmake.
 ```Shell
 echo ".NET Core 3.x"
 ./tools/test.sh
-
-echo ".NET Core 2.x"
-./tools/test_core2.sh
 ```
 
 ### Example
